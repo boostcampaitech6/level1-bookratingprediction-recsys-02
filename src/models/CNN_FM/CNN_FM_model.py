@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from torch import nn
 
+# feature 사이의 상호작용을 효율적으로 계산합니다.
 class FactorizationMachine(nn.Module):
     
     def __init__(self, input_dim, latent_dim):
@@ -31,6 +32,8 @@ class FactorizationMachine(nn.Module):
         x = linear + 0.5 * torch.sum(square_of_sum + sum_of_square, dim=1, keepdim=True)
         return x
 
+
+# 이미지 특징 추출을 위한 기초적인 CNN Layer를 정의합니다.
 class CNN_branch(nn.Module):
     
     def __init__(self):
@@ -52,7 +55,7 @@ class CNN_branch(nn.Module):
     def init_params(self):
         for layer in self.children():
             if type(layer) == nn.Conv2D:
-                nn.init.xavier_normal_(layer.weight)
+                nn.init.xavier_uniform_(layer.weight)
                 nn.init.zeros_(layer.bias)
 
     def forward(self, x):
@@ -65,7 +68,7 @@ class CNN_branch(nn.Module):
         x = self.relu(x)
         x = self.maxpool2(x)
 
-        x = x.view(-1, 12)
+        x = x.view(x.size(0), -1)
 
         return x
 
@@ -78,6 +81,8 @@ class CNN_FM(nn.Module):
 
         field_dims = np.array(
             [len(data['idx2user']), len(data['idx2isbn'])], dtype=np.uint32)
+        
+        # user_id, isbn embedding layer
         self.embedding = torch.nn.Embedding(sum(field_dims), args.cnn_embed_dim)
         self.offsets = np.array((0, *np.cumsum(field_dims)[:-1]), dtype=np.int32)
 
@@ -101,7 +106,7 @@ class CNN_FM(nn.Module):
         img_feature = self.cnn(img_vector)
 
         # concat embeddings
-        x = torch.cat((user_isbn_feature.view(-1,2*64), img_feature), 1)
+        x = torch.cat((user_isbn_feature.view(img_feature.size(0),-1), img_feature), 1)
 
         x = self.fm(x)
 
