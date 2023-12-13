@@ -7,12 +7,12 @@ assignees: ''
 
 ---
 
-## 설명
+## Description
 
-## 재현 방법
+## How to reproduce
 
 1.
 2.
 3.
 
-## 솔루션 제안
+## Solution
