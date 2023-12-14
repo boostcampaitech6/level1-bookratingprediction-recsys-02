@@ -7,7 +7,7 @@ from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
 from src.train import train, test
-
+import wandb
 
 def main(args):
     Setting.seed_everything(args.seed)
@@ -85,6 +85,8 @@ def main(args):
     filename = setting.get_submit_filename(args)
     submission.to_csv(filename, index=False)
 
+def format_args(args):
+    return ", ".join([f"{arg}={getattr(args, arg)}" for arg in vars(args)])
 
 if __name__ == "__main__":
 
@@ -144,4 +146,16 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
+    
+    
+    ### WandB initialization
+    wandb.init(project='ai-tech-level1-1')
+    
+    wandb.run.name = format_args(args)
+    wandb.run.save()
+    
+    wandb.config.update(args)
+    
     main(args)
+    
+    wandb.finish()

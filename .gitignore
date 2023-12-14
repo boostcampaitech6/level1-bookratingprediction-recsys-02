@@ -396,3 +396,5 @@ $RECYCLE.BIN/
 data
 saved_models
 submit
+wandb
+log

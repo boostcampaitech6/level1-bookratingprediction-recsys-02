@@ -77,10 +77,10 @@ class NeuralCollaborativeFiltering(nn.Module):
         self.field_dims = data['field_dims']
         self.user_field_idx = np.array((0, ), dtype=np.int32)
         self.item_field_idx = np.array((1, ), dtype=np.int32)
-        self.embedding = FeaturesEmbedding(self.field_dims, args.embedding_dim)
-        self.embed_output_dim = len(self.field_dims) * args.embedding_dim
+        self.embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
+        self.embed_output_dim = len(self.field_dims) * args.embed_dim
         self.mlp = MultiLayerPerceptron(self.embed_output_dim, args.mlp_dims, args.dropout, output_layer=False)
-        self.fc = torch.nn.Linear(args.mlp_dims[-1] + args.embedding_dim, 1)
+        self.fc = torch.nn.Linear(args.mlp_dims[-1] + args.embed_dim, 1)
 
 
     def forward(self, x):
