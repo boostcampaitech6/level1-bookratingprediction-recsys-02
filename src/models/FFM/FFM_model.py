@@ -28,8 +28,6 @@ class FieldAwareFactorizationMachine(nn.Module):
         [torch.nn.init.xavier_uniform_(embedding.weight.data) for embedding in self.embeddings]
 
     def forward(self, x: torch.Tensor):
-        # x = x + x.new_tensor(self.offsets).unsqueeze(0)
-        # x = x + x.new_tensor(self.offsets, dtype= torch.int32).unsqueeze(0)
         xs = [self.embeddings[i](x) for i in range(self.num_fields)]
         # 매번 사전에 정의된 필드만으로 계산이 되는 것을 확인할 수 있음
         ix = [xs[j][:, i] * xs[i][:, j] for i in range(self.num_fields - 1) for j in range(i + 1, self.num_fields)]
