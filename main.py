@@ -49,6 +49,7 @@ def main(args):
     else:
         pass
 
+
     ####################### Setting for Log
     setting = Setting()
 
@@ -57,7 +58,16 @@ def main(args):
 
     logger = Logger(args, log_path)
     logger.save_args()
+    
+    
+    ######################## WandB start run
+    filename = setting.get_submit_filename(args)
+    
+    wandb.run.name = filename[9:-4]
+    wandb.run.save()
 
+    wandb.config.update(args)
+    
 
     ######################## Model
     print(f'--------------- INIT {args.model} ---------------')
@@ -82,9 +92,14 @@ def main(args):
     else:
         pass
 
-    filename = setting.get_submit_filename(args)
     submission.to_csv(filename, index=False)
+    
+    
 
+    
+
+def format_args(args):
+    return ", ".join([f"{arg}={getattr(args, arg)}" for arg in vars(args)])
 
 if __name__ == "__main__":
     ############### wandb initialization
@@ -146,6 +161,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    wandb.config.update(args)
-    
     main(args)
+    
+    wandb.finish()
+    
