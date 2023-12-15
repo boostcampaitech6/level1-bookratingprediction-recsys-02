@@ -12,6 +12,22 @@ import wandb
 def main(args):
     Setting.seed_everything(args.seed)
 
+    ####################### Setting for Log
+    setting = Setting()
+
+    log_path = setting.get_log_path(args)
+    setting.make_dir(log_path)
+
+    logger = Logger(args, log_path)
+    logger.save_args()
+    
+    ######################## WandB start run
+    filename = setting.get_submit_filename(args)
+    
+    wandb.run.name = filename
+    wandb.run.save()
+
+    wandb.config.update(args)
 
     ######################## DATA LOAD
     print(f'--------------- {args.model} Load Data ---------------')
@@ -49,14 +65,6 @@ def main(args):
     else:
         pass
 
-    ####################### Setting for Log
-    setting = Setting()
-
-    log_path = setting.get_log_path(args)
-    setting.make_dir(log_path)
-
-    logger = Logger(args, log_path)
-    logger.save_args()
 
 
     ######################## Model
@@ -82,8 +90,11 @@ def main(args):
     else:
         pass
 
-    filename = setting.get_submit_filename(args)
     submission.to_csv(filename, index=False)
+    
+    
+
+    
 
 def format_args(args):
     return ", ".join([f"{arg}={getattr(args, arg)}" for arg in vars(args)])
@@ -148,14 +159,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    ### WandB initialization
-    wandb.init(project='ai-tech-level1-1')
-    
-    wandb.run.name = format_args(args)
-    wandb.run.save()
-
-    wandb.config.update(args)
-    
     main(args)
     
     wandb.finish()
+    
