@@ -91,8 +91,7 @@ def main(args):
     ######################## INFERENCE
     print(f'--------------- {args.model} PREDICT ---------------')
     if args.model in ('CatBoost',):
-        pass
-        #predicts = ml_test(args, model, data, setting)
+        predicts = ml_test(args, model, data, setting)
     else:
         predicts = test(args, model, data, setting)
 
@@ -100,7 +99,7 @@ def main(args):
     ######################## SAVE PREDICT
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
     submission = pd.read_csv(args.data_path + 'sample_submission.csv')
-    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN'):
+    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost'):
         submission['rating'] = predicts
     else:
         pass

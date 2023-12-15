@@ -112,12 +112,12 @@ def test(args, model, dataloader, setting):
 
 def ml_train(args, model, data, logger, setting):
 
-    model = model.fit(
-            data['X_train'], data['y_train'],
-            eval_set=(data['X_valid'], data['y_valid']),
-            use_best_model=True,
-            callbacks=[WandBCallback()],
-            verbose_eval=True)
+    model.fit(
+        data['X_train'], data['y_train'],
+        eval_set=(data['X_valid'], data['y_valid']),
+        use_best_model=True,
+        callbacks=[WandBCallback()],
+        verbose_eval=True)
 
     logger.close()
     return model
@@ -132,10 +132,10 @@ def ml_test(args, model, data, setting):
     #    pass
 
     # model save
-    model.save_model(f'./saved_models/{setting.save_time}_{args.model}_model.pt',
-           format="cbm",
-           export_parameters=None,
-           pool=None)
+#    model.save_model(f'./saved_models/{setting.save_time}_{args.model}_model.pt',
+#           format="cbm",
+#           export_parameters=None,
+#           pool=None)
 
     # predict
     predicts = model.predict(data['test'])
