@@ -110,9 +110,29 @@ def test(args, model, dataloader, setting):
 
 
 def ml_train(args, model, data, logger, setting):
+    model = model.fit(
+            data['X_train'], data['y_train'],
+            eval_set=(data['X_valid'], data['y_valid']),
+            use_best_model=True, logging_level='Verbose')
+    logger.close()
     return model
 
 
 def ml_test(args, model, data, setting):
+
+    # when model instanciation
+    #if args.use_best_model == True & model.get_best_iteration():
+    #    model.get_best_iteration()
+    #else:
+    #    pass
+
+    # model save
+    model.save_model(f'./saved_models/{setting.save_time}_{args.model}_model.pt',
+           format="cbm",
+           export_parameters=None,
+           pool=None)
+
+    # predict
     predicts = model.predict(data['test'])
+
     return predicts

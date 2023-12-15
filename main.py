@@ -169,6 +169,10 @@ if __name__ == "__main__":
     arg('--out_dim', type=int, default=32, help='DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.')
 
 
+    ############### CatBoost 
+    arg('--depth', type=int, default=6, help='CatBoostRegressor에서 depth를 조정할 수 있습니다.')
+    arg('--iterations', type=int, default=1000, help='CatBoostRegressor에서 iterations를 조정할 수 있습니다.')
+
     args = parser.parse_args()
     
     main(args)
