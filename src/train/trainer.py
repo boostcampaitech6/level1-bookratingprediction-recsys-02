@@ -52,12 +52,14 @@ def train(args, model, dataloader, logger, setting):
             batch +=1
             
             # Log train loss
-            wandb.log({"Train Loss": total_loss/batch})
+            if args.wandb:
+                wandb.log({"Train Loss": total_loss/batch})
             
         valid_loss = valid(args, model, dataloader, loss_fn)
         
         # Log valid loss
-        wandb.log({"Valid Loss": valid_loss})
+        if args.wandb:
+            wandb.log({"Valid Loss": valid_loss})
         
         print(f'Epoch: {epoch+1}, Train_loss: {total_loss/batch:.3f}, valid_loss: {valid_loss:.3f}')
         logger.log(epoch=epoch+1, train_loss=total_loss/batch, valid_loss=valid_loss)
