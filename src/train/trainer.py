@@ -1,5 +1,6 @@
 import os
 import tqdm
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import MSELoss
@@ -110,10 +111,14 @@ def test(args, model, dataloader, setting):
 
 
 def ml_train(args, model, data, logger, setting):
+
     model = model.fit(
             data['X_train'], data['y_train'],
             eval_set=(data['X_valid'], data['y_valid']),
-            use_best_model=True, logging_level='Verbose')
+            use_best_model=True,
+            callbacks=[WandBCallback()],
+            verbose_eval=True)
+
     logger.close()
     return model
 
@@ -136,3 +141,19 @@ def ml_test(args, model, data, setting):
     predicts = model.predict(data['test'])
 
     return predicts
+
+
+# W&B 콜백 클래스
+class WandBCallback:
+
+    def after_iteration(self, info):
+        iteration = info.iteration
+        metrics = info.metrics
+
+        # 학습 중인 메트릭을 로깅합니다.
+        for metric_name, metric_value in metrics.items():
+            if metric_name == 'learn':
+                wandb.log({'Train Loss': np.mean(metric_value['RMSE'])})
+            elif metric_name == 'validation':
+                wandb.log({'Valid Loss': np.mean(metric_value['RMSE'])})
+        return True

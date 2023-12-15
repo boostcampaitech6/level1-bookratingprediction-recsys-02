@@ -398,3 +398,4 @@ saved_models
 submit
 wandb
 log
+catboost_info
