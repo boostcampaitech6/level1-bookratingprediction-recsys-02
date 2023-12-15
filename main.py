@@ -89,7 +89,8 @@ def format_args(args):
     return ", ".join([f"{arg}={getattr(args, arg)}" for arg in vars(args)])
 
 if __name__ == "__main__":
-
+    ############### wandb initialization
+    wandb.init(project='ai-tech-level1-1')
 
     ######################## BASIC ENVIRONMENT SETUP
     parser = argparse.ArgumentParser(description='parser')
@@ -147,13 +148,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    
     ### WandB initialization
     wandb.init(project='ai-tech-level1-1')
     
     wandb.run.name = format_args(args)
     wandb.run.save()
-    
+
     wandb.config.update(args)
     
     main(args)
