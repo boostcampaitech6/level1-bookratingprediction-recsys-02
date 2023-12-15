@@ -12,22 +12,6 @@ import wandb
 def main(args):
     Setting.seed_everything(args.seed)
 
-    ####################### Setting for Log
-    setting = Setting()
-
-    log_path = setting.get_log_path(args)
-    setting.make_dir(log_path)
-
-    logger = Logger(args, log_path)
-    logger.save_args()
-    
-    ######################## WandB start run
-    filename = setting.get_submit_filename(args)
-    
-    wandb.run.name = filename
-    wandb.run.save()
-
-    wandb.config.update(args)
 
     ######################## DATA LOAD
     print(f'--------------- {args.model} Load Data ---------------')
@@ -66,6 +50,24 @@ def main(args):
         pass
 
 
+    ####################### Setting for Log
+    setting = Setting()
+
+    log_path = setting.get_log_path(args)
+    setting.make_dir(log_path)
+
+    logger = Logger(args, log_path)
+    logger.save_args()
+    
+    
+    ######################## WandB start run
+    filename = setting.get_submit_filename(args)
+    
+    wandb.run.name = filename[9:-4]
+    wandb.run.save()
+
+    wandb.config.update(args)
+    
 
     ######################## Model
     print(f'--------------- INIT {args.model} ---------------')
