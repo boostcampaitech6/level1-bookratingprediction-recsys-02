@@ -107,3 +107,12 @@ def test(args, model, dataloader, setting):
         y_hat = model(x)
         predicts.extend(y_hat.tolist())
     return predicts
+
+
+def ml_train(args, model, data, logger, setting):
+    return model
+
+
+def ml_test(args, model, data, setting):
+    predicts = model.predict(data['test'])
+    return predicts
