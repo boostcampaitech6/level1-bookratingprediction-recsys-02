@@ -7,7 +7,7 @@ from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
 from src.train import train, test
-
+import wandb
 
 def main(args):
     Setting.seed_everything(args.seed)
@@ -87,7 +87,8 @@ def main(args):
 
 
 if __name__ == "__main__":
-
+    ############### wandb initialization
+    wandb.init(project='ai-tech-level1-1')
 
     ######################## BASIC ENVIRONMENT SETUP
     parser = argparse.ArgumentParser(description='parser')
@@ -144,4 +145,7 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
+    
+    wandb.config.update(args)
+    
     main(args)
