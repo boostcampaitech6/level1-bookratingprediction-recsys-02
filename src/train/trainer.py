@@ -112,12 +112,17 @@ def test(args, model, dataloader, setting):
 
 def ml_train(args, model, data, logger, setting):
 
+    configs = {
+        'eval_set': (data['X_valid'], data['y_valid']),
+        'use_best_model': True,
+        'verbose_eval': True,
+    }
+    
+    if args.wandb:
+        configs['callbacks'] = [WandBCallback()]
+
     model.fit(
-        data['X_train'], data['y_train'],
-        eval_set=(data['X_valid'], data['y_valid']),
-        use_best_model=True,
-        callbacks=[WandBCallback()],
-        verbose_eval=True)
+        data['X_train'], data['y_train'], **configs)
 
     logger.close()
     return model
