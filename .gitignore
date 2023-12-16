@@ -398,3 +398,6 @@ saved_models
 submit
 wandb
 log
+
+# nohop file
+*.out

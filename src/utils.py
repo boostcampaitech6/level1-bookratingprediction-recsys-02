@@ -8,6 +8,10 @@ import logging
 import json
 from .models import *
 
+def parse_args(value):
+    # 사용자 정의 함수로 리스트로 파싱
+    return [int(dim) for dim in value.split(',')]
+
 def rmse(real: list, predict: list) -> float:
     '''
     [description]
