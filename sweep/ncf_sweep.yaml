@@ -35,4 +35,4 @@ parameters:
     values : [0.1, 0.2, 0.3]
 
   wandb:
-    values: [False]
+    values: [True]
