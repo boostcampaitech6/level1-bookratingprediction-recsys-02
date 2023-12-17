@@ -1,0 +1,38 @@
+program: main.py
+
+method: bayes
+
+name: ncf-sweep
+
+metric:
+  name: Valid Loss
+  goal: minimize
+
+parameters:
+  model:
+    values: ['NCF']
+
+  lr:
+    distribution: uniform
+    min: 0.0001
+    max: 0.01
+
+  batch_size:
+    values: [32, 64, 128]
+
+  embed_dim:
+    values: [8, 16, 32]
+
+  mlp_dims:
+    values:
+      - 16,32,64
+      - 32,64,128
+
+  epochs:
+    values: [2]
+
+  dropout:
+    values : [0.1, 0.2, 0.3]
+
+  wandb:
+    values: [True]

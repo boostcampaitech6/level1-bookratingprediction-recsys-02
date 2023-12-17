@@ -1,14 +1,13 @@
 import time
 import argparse
 import pandas as pd
-from src.utils import Logger, Setting, models_load
+from src.utils import Logger, Setting, models_load, parse_args
 from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
 from src.train import train, test
 import wandb
-
 
 def main(args):
     Setting.seed_everything(args.seed)
@@ -121,7 +120,7 @@ if __name__ == "__main__":
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
     arg('--seed', type=int, default=42, help='seed 값을 조정할 수 있습니다.')
     arg('--use_best_model', type=bool, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
-    arg('--wandb', action='store_true', help='WanbB 사용 여부를 설정할 수 있습니다.')
+    arg('--wandb', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=True, help='WandB 사용 여부를 설정할 수 있습니다.')
 
 
     ############### TRAINING OPTION
@@ -140,7 +139,7 @@ if __name__ == "__main__":
     ############### FM, FFM, NCF, WDN, DCN Common OPTION
     arg('--embed_dim', type=int, default=16, help='FM, FFM, NCF, WDN, DCN에서 embedding시킬 차원을 조정할 수 있습니다.')
     arg('--dropout', type=float, default=0.2, help='NCF, WDN, DCN에서 Dropout rate를 조정할 수 있습니다.')
-    arg('--mlp_dims', type=list, default=(16, 16), help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
+    arg('--mlp_dims', type=parse_args, default=(16, 16), help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
 
 
     ############### DCN
