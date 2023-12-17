@@ -1,7 +1,7 @@
 import time
 import argparse
 import pandas as pd
-from src.utils import Logger, Setting, models_load
+from src.utils import Logger, Setting, models_load, parse_args
 from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
@@ -66,18 +66,23 @@ def main(args):
 
     logger = Logger(args, log_path)
     logger.save_args()
-    
-    
-    ######################## WandB start run
+
+        
     filename = setting.get_submit_filename(args)
     
-    wandb.run.name = filename[9:-4]
-    wandb.run.save()
+    if args.wandb:   
+    
+        ############### wandb initialization
+        wandb.init(project='ai-tech-level1-1')
 
-    wandb.config.update(args)
+        wandb.run.name = filename[9:-4]
+        wandb.run.save()
 
-    if args.model in ('CatBoost',):
-        wandb.config.update(CatBoostConfig)
+        wandb.config.update(args)
+
+        if args.model in ('CatBoost',):
+            wandb.config.update(CatBoostConfig)
+            
 
     ######################## Model
     print(f'--------------- INIT {args.model} ---------------')
@@ -110,13 +115,11 @@ def main(args):
 
     submission.to_csv(filename, index=False)
     
+    if args.wandb:
+        wandb.finish()
 
-def format_args(args):
-    return ", ".join([f"{arg}={getattr(args, arg)}" for arg in vars(args)])
 
 if __name__ == "__main__":
-    ############### wandb initialization
-    wandb.init(project='ai-tech-level1-1')
 
     ######################## BASIC ENVIRONMENT SETUP
     parser = argparse.ArgumentParser(description='parser')
@@ -132,6 +135,7 @@ if __name__ == "__main__":
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
     arg('--seed', type=int, default=42, help='seed 값을 조정할 수 있습니다.')
     arg('--use_best_model', type=bool, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
+    arg('--wandb', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=True, help='WandB 사용 여부를 설정할 수 있습니다.')
 
 
     ############### TRAINING OPTION
@@ -150,7 +154,7 @@ if __name__ == "__main__":
     ############### FM, FFM, NCF, WDN, DCN Common OPTION
     arg('--embed_dim', type=int, default=16, help='FM, FFM, NCF, WDN, DCN에서 embedding시킬 차원을 조정할 수 있습니다.')
     arg('--dropout', type=float, default=0.2, help='NCF, WDN, DCN에서 Dropout rate를 조정할 수 있습니다.')
-    arg('--mlp_dims', type=list, default=(16, 16), help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
+    arg('--mlp_dims', type=parse_args, default=(16, 16), help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
 
 
     ############### DCN
@@ -175,6 +179,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     main(args)
-    
-    wandb.finish()
-    

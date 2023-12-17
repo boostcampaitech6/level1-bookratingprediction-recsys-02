@@ -399,3 +399,6 @@ submit
 wandb
 log
 catboost_info
+
+# nohop file
+*.out
