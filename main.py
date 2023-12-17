@@ -6,7 +6,9 @@ from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
+from src.data import ml_data_load, ml_data_split
 from src.train import train, test, ml_train, ml_test
+from src.ml_config.CatBoost import CatBoostConfig
 import wandb
 
 def main(args):
@@ -26,7 +28,7 @@ def main(args):
         nltk.download('punkt')
         data = text_data_load(args)
     elif args.model in ('CatBoost',):
-        data = context_data_load(args)
+        data = ml_data_load(args)
     else:
         pass
 
@@ -50,7 +52,7 @@ def main(args):
         data = text_data_loader(args, data)
 
     elif args.model in ('CatBoost',):
-        data = context_data_split(args, data)
+        data = ml_data_split(args, data)
 
     else:
         pass
@@ -73,7 +75,9 @@ def main(args):
     wandb.run.save()
 
     wandb.config.update(args)
-    
+
+    if args.model in ('CatBoost',):
+        wandb.config.update(CatBoostConfig)
 
     ######################## Model
     print(f'--------------- INIT {args.model} ---------------')

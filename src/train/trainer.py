@@ -118,8 +118,8 @@ def ml_train(args, model, data, logger, setting):
         'verbose_eval': True,
     }
     
-    if args.wandb:
-        configs['callbacks'] = [WandBCallback()]
+    #if args.wandb:
+    configs['callbacks'] = [WandBCallback()]
 
     model.fit(
         data['X_train'], data['y_train'], **configs)
