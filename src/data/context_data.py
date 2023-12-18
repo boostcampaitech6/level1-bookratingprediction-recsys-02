@@ -168,7 +168,6 @@ def context_data_split(args, data):
                 kfold.split(range(data['train'].shape[0]), data['train']['rating'])):
             data[f'train_idx_{i}'], data[f'valid_idx_{i}'] =\
                     train_index, valid_index
-
     else:
         X_train, X_valid, y_train, y_valid = train_test_split(
                                                         data['train'].drop(['rating'], axis=1),
@@ -212,11 +211,17 @@ def context_data_loader(args, data):
                 train_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
             valid_dataloader = DataLoader(
                 valid_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
-            test_dataloader = DataLoader(
-                test_dataset, batch_size=args.batch_size, shuffle=False)
 
             data[f'train_{i}_dataloader'], data[f'valid_{i}_dataloader']  =\
                     train_dataloader, valid_dataloader
+
+        train_dataset = TensorDataset(
+            torch.LongTensor(data['train'].drop(['rating'], axis=1).values), 
+            torch.LongTensor(data['train']['rating'].values))
+        test_dataloader = DataLoader(
+            test_dataset, batch_size=args.batch_size, shuffle=False)
+
+        data[f'retrain_dataloader'] = train_dataloader
         data[f'test_dataloader'] = test_dataloader
     else:
         train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
