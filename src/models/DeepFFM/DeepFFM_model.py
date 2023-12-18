@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-
+from typing import List
 
 # FM모델 등에서 활용되는 선형 결합 부분을 정의합니다.
 class FeaturesLinear(nn.Module):
@@ -20,10 +20,9 @@ class FieldAwareFactorizationMachine(nn.Module):
     def __init__(self, field_dims: np.ndarray, embed_dim: int):
         super().__init__()
         self.num_fields = len(field_dims)
-        self.input_dim = sum(field_dims)
 
 
-    def forward(self, x: torch.Tensor, xs: List[torch.Tensor]):
+    def forward(self, xs: List[torch.Tensor]):
         # 매번 사전에 정의된 필드만으로 계산이 되는 것을 확인할 수 있음
         ix = [xs[j][:, i] * xs[i][:, j] for i in range(self.num_fields - 1) for j in range(i + 1, self.num_fields)]
         ix = torch.stack(ix, dim=1)
@@ -54,13 +53,14 @@ class DeepFFM(nn.Module):
     def __init__(self, args, data):
         super().__init__()
         self.field_dims = data['field_dims']
+        self.num_fields = len(self.field_dims)
+        self.input_dim = sum(self.field_dims)
         self.linear = FeaturesLinear(self.field_dims)
         self.ffm = FieldAwareFactorizationMachine(self.field_dims, args.embed_dim)
         self.offsets = np.array((0, *np.cumsum(self.field_dims)[:-1]), dtype=np.int32)
-
         # 각 field에 대한 임베딩 레이어를 담은 리스트
         self.embeddings = torch.nn.ModuleList([
-            torch.nn.Embedding(self.input_dim, embed_dim) for _ in range(self.num_fields)
+            torch.nn.Embedding(self.input_dim, args.embed_dim) for _ in range(self.num_fields)
         ])
         [torch.nn.init.xavier_uniform_(embedding.weight.data) for embedding in self.embeddings]
 
@@ -68,11 +68,10 @@ class DeepFFM(nn.Module):
         self.mlp = MultiLayerPerceptron(self.embed_output_dim, args.mlp_dims, args.dropout)
 
     def forward(self, x: torch.Tensor):
-        
         x = x + x.new_tensor(self.offsets, dtype= torch.int32).unsqueeze(0)
-        xs = [emembeddings[i](x) for i in range(self.num_fields)]
-        avg_xs = torch.stack(xs, dim=0).mean(dim=0)
-        mlp_xs = torch.cat(avg_xs, dim=1)
+        xs = [self.embeddings[i](x) for i in range(self.num_fields)]
+        avg_xs = torch.stack(xs, dim=0).sum(dim=0)
+        mlp_xs = torch.cat([avg_xs[:, i, :] for i in range(avg_xs.size(1))], dim=1)
         ffm_term = torch.sum(torch.sum(self.ffm(xs), dim=1), dim=1, keepdim=True)
         
         x = self.linear(x) + ffm_term + self.mlp(mlp_xs)
