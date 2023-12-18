@@ -7,7 +7,18 @@ import torch.nn as nn
 import logging
 import json
 from .models import *
+import argparse
 
+# 입력값을 소문자로 변환
+def parse_args_boolean(value):
+    lower_value = value.lower()
+    if lower_value == 'true':
+        return True
+    elif lower_value == 'false':
+        return False
+    else:
+        raise argparse.ArgumentTypeError(f'--해당 인자에는 [true/false] 만 입력 가능합니다: {value}')
+    
 def parse_args(value):
     # 사용자 정의 함수로 리스트로 파싱
     return [int(dim) for dim in value.split(',')]
