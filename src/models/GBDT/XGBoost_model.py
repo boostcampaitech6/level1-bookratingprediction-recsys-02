@@ -3,7 +3,7 @@ from src.ml_config.XGBoost import XGBoostConfig
 
 class XGBoostModel(XGBRegressor):
 
-    def __init__(self, args):
+    def __init__(self):
         super().__init__(**XGBoostConfig)
 
 
