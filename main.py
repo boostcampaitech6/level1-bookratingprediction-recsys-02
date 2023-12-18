@@ -6,7 +6,9 @@ from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
-from src.train import train, test
+from src.data import ml_data_load, ml_data_split
+from src.train import train, test, ml_train, ml_test
+from src.ml_config.CatBoost import CatBoostConfig
 import wandb
 
 def main(args):
@@ -25,6 +27,8 @@ def main(args):
         import nltk
         nltk.download('punkt')
         data = text_data_load(args)
+    elif args.model in ('CatBoost',):
+        data = ml_data_load(args)
     else:
         pass
 
@@ -46,6 +50,10 @@ def main(args):
     elif args.model=='DeepCoNN':
         data = text_data_split(args, data)
         data = text_data_loader(args, data)
+
+    elif args.model in ('CatBoost',):
+        data = ml_data_split(args, data)
+
     else:
         pass
 
@@ -67,13 +75,14 @@ def main(args):
         ############### wandb initialization
         wandb.init(project='ai-tech-level1-1')
 
-        ######################## WandB start run
-        
         wandb.run.name = filename[9:-4]
         wandb.run.save()
 
         wandb.config.update(args)
-    
+
+        if args.model in ('CatBoost',):
+            wandb.config.update(CatBoostConfig)
+            
 
     ######################## Model
     print(f'--------------- INIT {args.model} ---------------')
@@ -82,18 +91,24 @@ def main(args):
 
     ######################## TRAIN
     print(f'--------------- {args.model} TRAINING ---------------')
-    model = train(args, model, data, logger, setting)
+    if args.model in ('CatBoost',):
+        model = ml_train(args, model, data, logger, setting)
+    else:
+        model = train(args, model, data, logger, setting)
 
 
     ######################## INFERENCE
     print(f'--------------- {args.model} PREDICT ---------------')
-    predicts = test(args, model, data, setting)
+    if args.model in ('CatBoost',):
+        predicts = ml_test(args, model, data, setting)
+    else:
+        predicts = test(args, model, data, setting)
 
 
     ######################## SAVE PREDICT
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
     submission = pd.read_csv(args.data_path + 'sample_submission.csv')
-    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN'):
+    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost'):
         submission['rating'] = predicts
     else:
         pass
@@ -114,7 +129,7 @@ if __name__ == "__main__":
     ############### BASIC OPTION
     arg('--data_path', type=str, default='data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN'],
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
@@ -164,5 +179,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     main(args)
-    
-    

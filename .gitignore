@@ -398,6 +398,7 @@ saved_models
 submit
 wandb
 log
+catboost_info
 
 # nohop file
 *.out
