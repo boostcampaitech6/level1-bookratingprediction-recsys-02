@@ -26,9 +26,9 @@ def train(args, model, dataloader, logger, setting):
     else:
         pass
     if args.optimizer == 'SGD':
-        optimizer = SGD(model.parameters(), lr=args.lr)
+        optimizer = SGD(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     elif args.optimizer == 'ADAM':
-        optimizer = Adam(model.parameters(), lr=args.lr)
+        optimizer = Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     else:
         pass
 
