@@ -32,3 +32,22 @@ class FieldAwareFactorizationMachine(nn.Module):
         ix = [xs[j][:, i] * xs[i][:, j] for i in range(self.num_fields - 1) for j in range(i + 1, self.num_fields)]
         ix = torch.stack(ix, dim=1)
         return ix
+
+# MLP을 구현합니다.
+class MultiLayerPerceptron(nn.Module):
+    def __init__(self, input_dim, embed_dims, dropout, output_layer=True):
+        super().__init__()
+        layers = list()
+        for embed_dim in embed_dims:
+            layers.append(torch.nn.Linear(input_dim, embed_dim))
+            layers.append(torch.nn.BatchNorm1d(embed_dim))
+            layers.append(torch.nn.ReLU())
+            layers.append(torch.nn.Dropout(p=dropout))
+            input_dim = embed_dim
+        if output_layer:
+            layers.append(torch.nn.Linear(input_dim, 1))
+        self.mlp = torch.nn.Sequential(*layers)
+
+
+    def forward(self, x):
+        return self.mlp(x)
