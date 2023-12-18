@@ -116,6 +116,9 @@ def main(args):
     submission.to_csv(filename, index=False)
     
     if args.wandb:
+        submission_artifact = wandb.Artifact('submission', type='output')
+        submission_artifact.add_file(filename, name=filename[9:-4])
+        wandb.log_artifact(submission_artifact)
         wandb.finish()
 
 
