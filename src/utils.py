@@ -65,6 +65,8 @@ def models_load(args, data):
         model = DeepCoNN(args, data).to(args.device)
     elif args.model=='CatBoost':
         model = CatBoostModel(args)
+    elif args.model=='XGBoost':
+        model = XGBoostModel(args)
     else:
         raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost]')
     return model
