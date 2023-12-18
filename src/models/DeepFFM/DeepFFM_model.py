@@ -70,7 +70,7 @@ class DeepFFM(nn.Module):
     def forward(self, x: torch.Tensor):
         x = x + x.new_tensor(self.offsets, dtype= torch.int32).unsqueeze(0)
         xs = [self.embeddings[i](x) for i in range(self.num_fields)]
-        avg_xs = torch.stack(xs, dim=0).sum(dim=0)
+        avg_xs = torch.stack(xs, dim=0).mean(dim=0)
         mlp_xs = torch.cat([avg_xs[:, i, :] for i in range(avg_xs.size(1))], dim=1)
         ffm_term = torch.sum(torch.sum(self.ffm(xs), dim=1), dim=1, keepdim=True)
         
