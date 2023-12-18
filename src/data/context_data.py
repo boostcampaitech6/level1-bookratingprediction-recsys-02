@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
@@ -161,15 +161,24 @@ def context_data_split(args, data):
             랜덤 seed 값
     ----------
     """
+    
+    if args.cv:
+        kfold = StratifiedKFold(n_splits=args.k, random_state=args.seed, shuffle=True)
+        for i, (train_index, valid_index) in enumerate(
+                kfold.split(range(data['train'].shape[0]), data['train']['rating'])):
+            data[f'train_idx_{i}'], data[f'valid_idx_{i}'] =\
+                    train_index, valid_index
 
-    X_train, X_valid, y_train, y_valid = train_test_split(
+    else:
+        X_train, X_valid, y_train, y_valid = train_test_split(
                                                         data['train'].drop(['rating'], axis=1),
                                                         data['train']['rating'],
                                                         test_size=args.test_size,
                                                         random_state=args.seed,
                                                         shuffle=True
                                                         )
-    data['X_train'], data['X_valid'], data['y_train'], data['y_valid'] = X_train, X_valid, y_train, y_valid
+        data['X_train'], data['X_valid'], data['y_train'], data['y_valid'] = \
+                X_train, X_valid, y_train, y_valid
     return data
 
 def context_data_loader(args, data):
@@ -183,15 +192,41 @@ def context_data_loader(args, data):
             data shuffle 여부
     ----------
     """
+    
+    if args.cv:
+        for i in range(args.k):
+            train_index, valid_index = data[f'train_idx_{i}'], data[f'valid_idx_{i}']
+            
+            train_data = data['train'].iloc[train_index,:]
+            valid_data = data['train'].iloc[train_index,:]
 
-    train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
-    valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
-    test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
+            train_dataset = TensorDataset(
+                torch.LongTensor(train_data.drop(['rating'], axis=1).values), 
+                torch.LongTensor(train_data['rating'].values))
+            valid_dataset = TensorDataset(
+                torch.LongTensor(valid_data.drop(['rating'], axis=1).values), 
+                torch.LongTensor(valid_data['rating'].values))
+            test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
-    valid_dataloader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
-    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+            train_dataloader = DataLoader(
+                train_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
+            valid_dataloader = DataLoader(
+                valid_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
+            test_dataloader = DataLoader(
+                test_dataset, batch_size=args.batch_size, shuffle=False)
 
-    data['train_dataloader'], data['valid_dataloader'], data['test_dataloader'] = train_dataloader, valid_dataloader, test_dataloader
+            data[f'train_{i}_dataloader'], data[f'valid_{i}_dataloader']  =\
+                    train_dataloader, valid_dataloader
+        data[f'test_dataloader'] = test_dataloader
+    else:
+        train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
+        valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
+        test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
+
+        train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
+        valid_dataloader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
+        test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+
+        data['train_dataloader'], data['valid_dataloader'], data['test_dataloader'] = train_dataloader, valid_dataloader, test_dataloader
 
     return data

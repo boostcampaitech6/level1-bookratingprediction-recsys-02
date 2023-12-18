@@ -7,6 +7,7 @@ from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
 from src.train import train, test
+from src.train import cv_train, cv_test, retrain
 import wandb
 
 def main(args):
@@ -74,21 +75,33 @@ def main(args):
 
         wandb.config.update(args)
     
+    if args.cv:
+        ######################## Cross Validation 
+        models = []
+        for i in range(args.k):
+            model = models_load(args,data)
+            models.append(cv_train(args, model, data, logger, setting, i))
+        if args.retrain:
+            model = models_load(args,data)
+            model = retrain(args, model, data, logger, setting)
+            predicts = test(args, model, data, setting)
+        else:
+            predicts = cv_test(args, models, data, setting)
+    else:
 
-    ######################## Model
-    print(f'--------------- INIT {args.model} ---------------')
-    model = models_load(args,data)
+        ######################## Model
+        print(f'--------------- INIT {args.model} ---------------')
+        model = models_load(args,data)
 
 
-    ######################## TRAIN
-    print(f'--------------- {args.model} TRAINING ---------------')
-    model = train(args, model, data, logger, setting)
+        ######################## TRAIN
+        print(f'--------------- {args.model} TRAINING ---------------')
+        model = train(args, model, data, logger, setting)
 
 
-    ######################## INFERENCE
-    print(f'--------------- {args.model} PREDICT ---------------')
-    predicts = test(args, model, data, setting)
-
+        ######################## INFERENCE
+        print(f'--------------- {args.model} PREDICT ---------------')
+        predicts = test(args, model, data, setting)
 
     ######################## SAVE PREDICT
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
@@ -121,6 +134,12 @@ if __name__ == "__main__":
     arg('--seed', type=int, default=42, help='seed 값을 조정할 수 있습니다.')
     arg('--use_best_model', type=bool, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
     arg('--wandb', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=True, help='WandB 사용 여부를 설정할 수 있습니다.')
+
+
+    ############### SPLIT OPTION
+    arg('--cv', type=bool, default=True, help='cross-validation 여부를 조정할 수 있습니다.')
+    arg('--k', type=int, default=5, help='데이터를 몇 개로 나눌 것인지 k를 조정할 수 있습니다.')
+    arg('--retrain', type=bool, default=True, help='전체 데이터로 재학습할 건지 여부를 결정합니다.')
 
 
     ############### TRAINING OPTION
