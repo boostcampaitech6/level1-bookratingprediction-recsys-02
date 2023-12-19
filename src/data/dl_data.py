@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
@@ -43,6 +44,14 @@ def dl_data_load(args):
     sub['isbn'] = sub['isbn'].map(isbn2idx)
     test['isbn'] = test['isbn'].map(isbn2idx)
 
+    ######################## MERGE DATA
+    if args.merge_users:
+        train = train.merge(users, on='user_id', how='left')
+        test = test.merge(users, on='user_id', how='left')
+    
+    if args.merge_books:
+        train = train.merge(books, on='isbn', how='left')
+        test = test.merge(books, on='isbn', how='left')
 
     field_dims = np.array([len(user2idx), len(isbn2idx)], dtype=np.uint32)
 
@@ -112,12 +121,12 @@ def dl_data_loader(args, data):
 def preprocess_user(args, users):
     print("|-user preprocessing [start]")
 
-    features_function_dict = {'location': __preprocess_location__}
+    feature_to_function = {'location': __preprocess_location__,}
 
     for feature in args.preprocess_user:
-        if feature not in features_function_dict:
+        if feature not in feature_to_function:
             raise ValueError(f"정의되지 않은 feature입니다: {feature}")
-        preprocess = features_function_dict[feature]
+        preprocess = feature_to_function[feature]
         preprocess(users)
     
     print("|-user preprocessing [end]")
@@ -126,7 +135,7 @@ def preprocess_user(args, users):
 def preprocess_book(args, books):
     print("|-book preprocessing [start]")
 
-    features_function_dict = {'isbn': __preprocess_isbn__,
+    feature_to_function = {'isbn': __preprocess_isbn__,
                               'book_title': __preprocess_title__,
                               'book_author': __preprocess_author__,
                               'year_of_publication': __preprocess_year_of_publication__,
@@ -138,9 +147,9 @@ def preprocess_book(args, books):
                               }
     
     for feature in args.preprocess_book:
-        if feature not in features_function_dict:
+        if feature not in feature_to_function:
             raise ValueError(f"정의되지 않은 feature입니다: {feature}")
-        preprocess = features_function_dict[feature]
+        preprocess = feature_to_function[feature]
         preprocess(books)
 
     print("|-book preprocessing [end]")
@@ -258,3 +267,21 @@ def __state_and_country_map_by_city__(users):
                 city2country[city] = country
     
     return city2state, city2country
+
+label_encoder = LabelEncoder()
+def labeling(dataFrame: pd.DataFrame, feature_name: str) -> None:
+    dataFrame[feature_name] = label_encoder.fit_transform(dataFrame[feature_name])
+
+def binning(dataFrame: pd.DataFrame, feature_name: str, bins: list, lables: list, right: bool= False) -> None:
+    '''
+        구간의 임계값인 bins가 각 구간의 label인 labels의 개수보다 항상 1개 더 많아야 합니다.
+        right: 우측 임계값을 포함하는지 여부
+            True: [0, 20]
+            False: [0, 20)
+        예시> binning(users, 'age', [0, 20, 30, 40, 50, 60, 100], [1,2,3,4,5,6])
+    '''
+    dataFrame[feature_name] = pd.cut(dataFrame[feature_name], labels= lables, bins= bins, right= right)
+
+def fill_nan_with_mode(dataFrame: pd.DataFrame, feature_name: str) -> None:
+    mode_value = dataFrame[feature_name].mode().iloc[0]
+    dataFrame[feature_name].fillna(mode_value, inplace=True)
