@@ -30,13 +30,21 @@ def dl_data_load(args):
     ######################## MERGE DATA
     if args.merge_users:
         target_features = list(args.preprocess_user)
-        target_features.remove('location')
+
+        if 'location' in target_features:
+            target_features.remove('location')
+            for feature in ('location_city', 'location_state', 'location_country'):
+                target_features.append(feature)
 
         train = train.merge(users[target_features], on='user_id', how='left')
         test = test.merge(users[target_features], on='user_id', how='left')
     
     if args.merge_books:
         target_features = list(args.preprocess_book)
+
+        for feature in ('isbn_group', 'isbn_publisher', 'isbn_serial'):
+            target_features.append(feature)
+
         train = train.merge(books[target_features], on='isbn', how='left')
         test = test.merge(books[target_features], on='isbn', how='left')
 
@@ -114,7 +122,6 @@ def dl_data_loader(args, data):
             data shuffle 여부
     ----------
     """
-    print(data['X_train'])
     train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
     valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
     test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
@@ -141,6 +148,7 @@ def preprocess_user(args, users):
         preprocess = feature_to_function[feature]
         preprocess(users)
     
+    print(">>>>>>>", users.columns)
     print("|-user preprocessing [end]")
 
 def __preprocess_age__(users, feature_name: str= 'age'):
@@ -358,13 +366,18 @@ def __preprocess_location__(users, feature_name= 'location'):
     
     __remove_location_special_symbols__(users)
 
-    __split_user_location__(users)
+    splited_location = __splited_user_location__(users)
+    
+    for feature in splited_location:
+        labeling(users, feature)
 
     __fill_unknown_location_with_nan__(users)
 
     __fill_unknown_state_and_country_by_city__(users)
 
     drop_feature(users, feature_name)
+
+    print(">>>", users.columns)
 
 
 def __fill_unknown_location_with_nan__(users):
@@ -386,12 +399,14 @@ def __remove_category_special_symbols__(books, regex= r'[^0-9a-zA-Z:, ]'):
     print(" |-remove category special symbols [end]")
 
 
-def __split_user_location__(users, delimeter= ','):
+def __splited_user_location__(users, delimeter= ','):
     print(" |-split user location [start]")
     users['location_city'] = users['location'].apply(lambda x: x.split(delimeter)[0].strip()) # location_city 정의: location의 첫번째 부분
     users['location_state'] = users['location'].apply(lambda x: x.split(delimeter)[1].strip()) # location_state 정의: location의 두번째 부분
     users['location_country'] = users['location'].apply(lambda x: x.split(delimeter)[2].strip()) # location_country 정의: location의 세번째 부분
     print(" |-split user location [end]")
+
+    return ('location_city', 'location_state', 'location_country')
 
 
 def __fill_unknown_state_and_country_by_city__(users):
