@@ -5,6 +5,45 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 
+def preprocess_user(args, users):
+    ######## user preprocessing start
+    if args.user_split:
+        print("user preprocessing start")
+        ######## 1. location split
+        __split_user_location__(users)
+        ######## 2. remove location special symbols
+        __remove_location_special_symbols__(users)
+        ######## 3. fill nan value with unknown
+        __fill_nan_value_with_unknown__(users)
+        ######## 4. fill state and country from city
+        __fill_state_country_from_city__(users)
+        print("user preprocessing end")
+    ######## user preprocessing end
+    pass
+
+def __fill_state_country_from_city__(users):
+    print("fill state and country from start")
+    print("fill state and country from end")
+
+def __fill_nan_value_with_unknown__(users):
+    print("fill nan value with unknown start")
+    print("fill nan value with unknown end")
+
+def __remove_location_special_symbols__(users):
+    print("remove location special symbols start")
+    print("remove location special symbols end")
+
+def __split_user_location__(users, delimeter=','):
+    print("split user location start")
+    city_state_country = users['lcoation'].str.split(delimeter).strip()
+    users['city'] = city_state_country[0]
+    users['state'] = city_state_country[1]
+    users['country'] = city_state_country[2]
+    print("split user location end")
+
+def preprocess_book(args, books):
+    pass
+
 def dl_data_load(args):
     """
     Parameters
@@ -22,6 +61,10 @@ def dl_data_load(args):
     test = pd.read_csv(args.data_path + 'test_ratings.csv')
     sub = pd.read_csv(args.data_path + 'sample_submission.csv')
 
+    ######################## DATA PREPROCESSING
+    users = preprocess_user(args, users)
+    books = preprocess_book(args, books)
+
     ids = pd.concat([train['user_id'], sub['user_id']]).unique()
     isbns = pd.concat([train['isbn'], sub['isbn']]).unique()
 
@@ -38,6 +81,7 @@ def dl_data_load(args):
     train['isbn'] = train['isbn'].map(isbn2idx)
     sub['isbn'] = sub['isbn'].map(isbn2idx)
     test['isbn'] = test['isbn'].map(isbn2idx)
+
 
     field_dims = np.array([len(user2idx), len(isbn2idx)], dtype=np.uint32)
 
