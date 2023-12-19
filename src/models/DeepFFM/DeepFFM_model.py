@@ -10,8 +10,10 @@ class FeaturesLinear(nn.Module):
         self.fc = torch.nn.Embedding(sum(field_dims), output_dim)
         self.bias = torch.nn.Parameter(torch.zeros((output_dim,)))
 
+
     def forward(self, x: torch.Tensor):
         return torch.sum(self.fc(x), dim=1) + self.bias
+
 
 # FFM모델을 구현합니다.
 # feature간의 상호작용을 파악하기 위해서 잠재백터를 두는 과정을 보여줍니다.
@@ -47,6 +49,7 @@ class MultiLayerPerceptron(nn.Module):
     def forward(self, x):
         return self.mlp(x)
 
+
 # 최종적인 DeepFFM모델입니다.
 # 각 필드별로 곱해져 계산된 embedding 결과를 합하고, 마지막으로 embedding 결과를 합하여 마무리합니다.
 class DeepFFM(nn.Module):
@@ -58,6 +61,7 @@ class DeepFFM(nn.Module):
         self.linear = FeaturesLinear(self.field_dims)
         self.ffm = FieldAwareFactorizationMachine(self.field_dims, args.embed_dim)
         self.offsets = np.array((0, *np.cumsum(self.field_dims)[:-1]), dtype=np.int32)
+
         # 각 field에 대한 임베딩 레이어를 담은 리스트
         self.embeddings = torch.nn.ModuleList([
             torch.nn.Embedding(self.input_dim, args.embed_dim) for _ in range(self.num_fields)
@@ -66,6 +70,7 @@ class DeepFFM(nn.Module):
 
         self.embed_output_dim = len(self.field_dims) * args.embed_dim
         self.mlp = MultiLayerPerceptron(self.embed_output_dim, args.mlp_dims, args.dropout)
+
 
     def forward(self, x: torch.Tensor):
         x = x + x.new_tensor(self.offsets, dtype= torch.int32).unsqueeze(0)
