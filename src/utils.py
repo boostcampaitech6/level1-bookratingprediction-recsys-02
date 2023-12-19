@@ -53,6 +53,8 @@ def models_load(args, data):
         model = FactorizationMachineModel(args, data).to(args.device)
     elif args.model=='FFM':
         model = FieldAwareFactorizationMachineModel(args, data).to(args.device)
+    elif args.model=='DeepFM':
+        model = DeepFMModel(args, data).to(args.device)
     elif args.model=='NCF':
         model = NeuralCollaborativeFiltering(args, data).to(args.device)
     elif args.model=='WDN':
@@ -66,7 +68,7 @@ def models_load(args, data):
     elif args.model=='CatBoost':
         model = CatBoostModel(args)
     else:
-        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost]')
+        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM]')
     return model
 
 
