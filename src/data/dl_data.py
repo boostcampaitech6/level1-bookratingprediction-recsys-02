@@ -216,6 +216,21 @@ def fill_nan_with_mode(dataFrame: pd.DataFrame, feature_name: str) -> None:
     dataFrame[feature_name].fillna(mode_value, inplace=True)
 
 
+def fill_nan_with_max(dataFrame: pd.DataFrame, feature_name: str) -> None:
+    value = dataFrame[feature_name].max()
+    dataFrame[feature_name].fillna(value, inplace=True)
+
+
+def fill_nan_with_min(dataFrame: pd.DataFrame, feature_name: str) -> None:
+    value = dataFrame[feature_name].min()
+    dataFrame[feature_name].fillna(value, inplace=True)
+
+
+def fill_nan_with_median(dataFrame: pd.DataFrame, feature_name: str) -> None:
+    value = dataFrame[feature_name].median()
+    dataFrame[feature_name].fillna(value, inplace=True)
+
+
 def remove_special_symbols(dataFrame: pd.DataFrame, feature_name: str, regex: str= r'[^0-9a-zA-Z:,]'):
     dataFrame[feature_name] = dataFrame[feature_name].str.replace(regex, '', regex=True)
 
@@ -226,6 +241,7 @@ def lower(dataFrame: pd.DataFrame, feature_name: str):
 
 def fill_nan_with_input(dataFrame: pd.DataFrame, feature_name: str, input: str) -> None:
     dataFrame[feature_name].fillna(input, inplace=True)
+
 
 def drop_feature(dataFrame: pd.DataFrame, feature_name: str) -> None:
     dataFrame.drop(feature_name, inplace=True, axis=1)
