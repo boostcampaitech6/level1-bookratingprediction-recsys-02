@@ -143,8 +143,11 @@ if __name__ == "__main__":
     arg('--use_best_model', type=bool, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
     arg('--wandb', type=parse_args_boolean, default=True, help='WandB 사용 여부를 설정할 수 있습니다.')
 
-    arg('--preprocess_user', type=parse_args, default=('location',), help='dl-data에서 users의 전처리 대상 칼럼을 지정할 수 있습니다.')
-    arg('--preprocess_book', type=parse_args, default=('isbn',), help='dl-data에서 books의 전처리 대상 칼럼을 지정할 수 있습니다.')
+    arg('--preprocess_user', type=parse_args, default=('user_id', 'age', 'location',), help='dl-data에서 users의 전처리 대상 칼럼을 지정할 수 있습니다.')
+    arg('--preprocess_book', type=parse_args, default=('isbn', 'book_title', 'year_of_publication', 'publisher', 'language', 'category',), help='dl-data에서 books의 전처리 대상 칼럼을 지정할 수 있습니다.')
+
+    arg('--merge_users', type=parse_args_boolean, default=False, help='users 정보 사용 여부를 설정할 수 있습니다.')
+    arg('--merge_books', type=parse_args_boolean, default=False, help='books 정보 사용 여부를 설정할 수 있습니다.')
 
     ############### TRAINING OPTION
     arg('--batch_size', type=int, default=1024, help='Batch size를 조정할 수 있습니다.')
