@@ -122,10 +122,12 @@ def ml_train(args, model, data, logger, setting):
 
     if args.model == 'CatBoost':
         configs['use_best_model'] = True
-        #if args.wandb:
-        configs['callbacks'] = [WandBCallback()]
-    elif args.model == 'XGBoost':
-        configs['callbacks'] = [WandBCallbackXgb()]
+
+    if args.wandb:
+        if args.model == 'CatBoost':
+            configs['callbacks'] = [WandBCallback()]
+        elif args.model == 'XGBoost':
+            configs['callbacks'] = [WandBCallbackXgb()]
 
     model.fit(
         data['X_train'], data['y_train'], **configs)
