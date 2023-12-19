@@ -68,8 +68,18 @@ def train(args, model, dataloader, logger, setting):
         if minimum_loss > valid_loss:
             minimum_loss = valid_loss
             os.makedirs(args.saved_model_path, exist_ok=True)
-            torch.save(model.state_dict(), f'{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt')
+            model_file_path = f'{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt'
+            torch.save(model.state_dict(), model_file_path)
+            
+               
     logger.close()
+    
+    # Add the model file to the artifact
+    if args.wandb:
+        model_artifact = wandb.Artifact('best_model', type='model')
+        model_artifact.add_file(model_file_path, name=f'{setting.save_time}_{args.model}_model.pt')
+        wandb.log_artifact(model_artifact)
+            
     return model
 
 
