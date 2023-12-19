@@ -186,6 +186,11 @@ class DeepFMModel(nn.Module):
         field_dims = data['field_dims']
         
         # 각종 변수들을 설정
+        self.text = args.merge_summary
+        if self.text:
+            self.text_dim = field_dims[-1]
+            field_dims = field_dims[:-1]
+
         self.input_dim = sum(field_dims) # 입력값의 차원 = 모든 field의 크기를 더한 값
         self.num_fields = len(field_dims) # field의 개수
         self.offsets = np.concatenate([[0], np.cumsum(field_dims)[:-1]]) # 각 field의 시작 위치
@@ -199,8 +204,10 @@ class DeepFMModel(nn.Module):
         self.fm = FM_component(input_dim=self.input_dim)
 
         # DNN component 
+        dnn_input = self.num_fields * factor_dim
+        if self.text: dnn_input += self.text_dim
         self.dnn = DNN_component(
-            input_dim=(self.num_fields * factor_dim), 
+            input_dim=dnn_input,
             mlp_dims=args.mlp_dims, activation_name=args.activation_fn, 
             dropout_rate=args.dropout, use_bn=args.use_bn)
         
@@ -222,6 +229,10 @@ class DeepFMModel(nn.Module):
         :return: y: 모델의 출력값
                     Float Tensor이며 사이즈는 "(batch_size, 1)"
         '''
+
+        if self.text:
+            x, text_x = x
+
         # sparse_x 만들기
         x = x + x.new_tensor(self.offsets).unsqueeze(0)
         sparse_x = torch.zeros(x.size(0), self.input_dim, device=x.device).scatter_(1, x, 1.)
@@ -233,7 +244,8 @@ class DeepFMModel(nn.Module):
         y_fm = self.fm(sparse_x, torch.stack(dense_x, dim=1))
 
         # DNN 레이어를 거쳐 y_dnn을 구함
-        y_dnn = self.dnn(torch.cat(dense_x, dim=1))
+        embed_x = torch.cat(dense_x, dim=1)
+        y_dnn = self.dnn(torch.cat((embed_x, text_x.squeeze(-1)), dim=1))
         
         # y = y_fm + y_dnn
         output = y_fm + y_dnn.squeeze(1)

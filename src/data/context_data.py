@@ -129,9 +129,33 @@ def context_data_load(args):
     books['isbn'] = books['isbn'].map(isbn2idx)
 
     idx, context_train, context_test = process_context_data(users, books, train, test)
-    field_dims = np.array([len(user2idx), len(isbn2idx),
-                            6, len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),
-                            len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), len(idx['author2idx'])], dtype=np.uint32)
+
+    field_dims = np.array([
+        len(user2idx), len(isbn2idx), 6,
+        len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),
+        len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), len(idx['author2idx'])], dtype=np.uint32)
+
+#    if args.merge_title:
+#        pass
+    ## summary load
+    if args.merge_summary:
+
+        train_summary = np.load('data/text_vector/train_item_summary_vector.npy', allow_pickle=True)
+        test_summary = np.load('data/text_vector/test_item_summary_vector.npy', allow_pickle=True)
+
+        train_books_text_df = pd.DataFrame([train_summary[0], train_summary[1]]).T
+        test_books_text_df = pd.DataFrame([test_summary[0], test_summary[1]]).T
+
+        train_books_text_df.columns = ['isbn', 'item_summary_vector']
+        test_books_text_df.columns = ['isbn', 'item_summary_vector']
+
+        train_books_text_df['isbn'] = train_books_text_df['isbn'].astype('int')
+        test_books_text_df['isbn'] = test_books_text_df['isbn'].astype('int')
+
+        context_train = pd.merge(context_train, train_books_text_df[['isbn', 'item_summary_vector']], on='isbn', how='left')
+        context_test = pd.merge(context_test, test_books_text_df[['isbn', 'item_summary_vector']], on='isbn', how='left')
+
+        field_dims = np.array((*field_dims, 768), dtype=np.uint32)
 
     data = {
             'train':context_train,
@@ -172,6 +196,43 @@ def context_data_split(args, data):
     data['X_train'], data['X_valid'], data['y_train'], data['y_valid'] = X_train, X_valid, y_train, y_valid
     return data
 
+class Text_Dataset(Dataset):
+    def __init__(self, context_vector, item_summary_vector, train=True, label=None):
+        """
+        Parameters
+        ----------
+        context_vector : np.ndarray
+            벡터화된 유저와 책 데이터를 입렵합니다.
+        item_summary_vector : np.ndarray
+            벡터화된 책에 대한 요약 정보 데이터 입력합니다.
+        label : np.ndarray
+            정답 데이터를 입력합니다.
+        ----------
+        """
+        self.context_vector = context_vector
+        self.item_summary_vector = item_summary_vector
+        self.train = train
+        if self.train:
+            self.label = label
+
+    def __len__(self):
+        return self.context_vector.shape[0]
+
+    def __getitem__(self, i):
+
+        if self.train:
+            return {
+                'context_vector' : torch.tensor(self.context_vector[i], dtype=torch.long),
+                'item_summary_vector' : torch.tensor(self.item_summary_vector[i].reshape(-1, 1), dtype=torch.float32),
+                'label' : torch.tensor(self.label[i], dtype=torch.float32),
+            }
+        else:
+            return {
+                'context_vector' : torch.tensor(self.context_vector[i], dtype=torch.long),
+                'item_summary_vector' : torch.tensor(self.item_summary_vector[i].reshape(-1, 1), dtype=torch.float32),
+            }
+
+
 def context_data_loader(args, data):
     """
     Parameters
@@ -184,14 +245,34 @@ def context_data_loader(args, data):
     ----------
     """
 
-    train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
-    valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
-    test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
+    if args.merge_summary:
+
+        train_dataset = Text_Dataset(
+            data['X_train'].drop(['item_summary_vector'], axis=1).values,
+            data['X_train']['item_summary_vector'].values,
+            True, data['y_train'].values
+        )
+
+        valid_dataset = Text_Dataset(
+            data['X_valid'].drop(['item_summary_vector'], axis=1).values,
+            data['X_valid']['item_summary_vector'].values,
+            True, data['y_valid'].values
+        )
+        test_dataset = Text_Dataset(
+            data['test'].drop(['item_summary_vector'], axis=1).values,
+            data['test']['item_summary_vector'].values,
+            False
+        )
+    else:
+        train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
+        valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
+        test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
 
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
     valid_dataloader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
-    data['train_dataloader'], data['valid_dataloader'], data['test_dataloader'] = train_dataloader, valid_dataloader, test_dataloader
+    data['train_dataloader'], data['valid_dataloader'], data['test_dataloader'] =\
+            train_dataloader, valid_dataloader, test_dataloader
 
     return data

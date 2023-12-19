@@ -38,7 +38,10 @@ def train(args, model, dataloader, logger, setting):
         batch = 0
 
         for idx, data in enumerate(dataloader['train_dataloader']):
-            if args.model == 'CNN_FM':
+            if args.model == 'DeepFM' and args.merge_summary:
+                x, y = [data['context_vector'].to(args.device), 
+                    data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
+            elif args.model == 'CNN_FM':
                 x, y = [data['user_isbn_vector'].to(args.device), data['img_vector'].to(args.device)], data['label'].to(args.device)
             elif args.model == 'DeepCoNN':
                 x, y = [data['user_isbn_vector'].to(args.device), data['user_summary_merge_vector'].to(args.device), data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
@@ -78,7 +81,10 @@ def valid(args, model, dataloader, loss_fn):
     batch = 0
 
     for idx, data in enumerate(dataloader['valid_dataloader']):
-        if args.model == 'CNN_FM':
+        if args.model == 'DeepFM' and args.merge_summary:
+            x, y = [data['context_vector'].to(args.device), 
+                data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
+        elif args.model == 'CNN_FM':
             x, y = [data['user_isbn_vector'].to(args.device), data['img_vector'].to(args.device)], data['label'].to(args.device)
         elif args.model == 'DeepCoNN':
             x, y = [data['user_isbn_vector'].to(args.device), data['user_summary_merge_vector'].to(args.device), data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
@@ -101,7 +107,9 @@ def test(args, model, dataloader, setting):
     model.eval()
 
     for idx, data in enumerate(dataloader['test_dataloader']):
-        if args.model == 'CNN_FM':
+        if args.model == 'DeepFM' and args.merge_summary:
+            x = [data['context_vector'].to(args.device), data['item_summary_vector'].to(args.device)]
+        elif args.model == 'CNN_FM':
             x, _ = [data['user_isbn_vector'].to(args.device), data['img_vector'].to(args.device)], data['label'].to(args.device)
         elif args.model == 'DeepCoNN':
             x, _ = [data['user_isbn_vector'].to(args.device), data['user_summary_merge_vector'].to(args.device), data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
@@ -120,8 +128,8 @@ def ml_train(args, model, data, logger, setting):
         'verbose_eval': True,
     }
     
-    #if args.wandb:
-    configs['callbacks'] = [WandBCallback()]
+    if args.wandb:
+        configs['callbacks'] = [WandBCallback()]
 
     model.fit(
         data['X_train'], data['y_train'], **configs)

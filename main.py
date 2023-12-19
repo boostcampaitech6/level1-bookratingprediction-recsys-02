@@ -14,6 +14,12 @@ import wandb
 def main(args):
     Setting.seed_everything(args.seed)
 
+    # text vector를 생성
+    if args.vector_create:
+        import nltk
+        nltk.download('punkt')
+        data = text_data_load(args)
+        exit()
 
     ######################## DATA LOAD
     print(f'--------------- {args.model} Load Data ---------------')
@@ -161,6 +167,13 @@ if __name__ == "__main__":
     arg('--activation_fn', type=str, default='relu', choices=['relu', 'tanh'], help='활성화 함수를 변경할 수 있습니다.')
     arg('--use_bn', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=True, help='배치 정규화 사용 여부를 설정할 수 있습니다.')
 
+    arg('--merge_title', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='book title 사용 여부를 설정할 수 있습니다.')
+    arg('--merge_summary', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='book summary 사용 여부를 설정할 수 있습니다.')
+
 
     ############### DCN
     arg('--num_layers', type=int, default=3, help='에서 Cross Network의 레이어 수를 조정할 수 있습니다.')
@@ -179,7 +192,6 @@ if __name__ == "__main__":
     arg('--kernel_size', type=int, default=3, help='DEEP_CONN에서 1D conv의 kernel 크기를 조정할 수 있습니다.')
     arg('--word_dim', type=int, default=768, help='DEEP_CONN에서 1D conv의 입력 크기를 조정할 수 있습니다.')
     arg('--out_dim', type=int, default=32, help='DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.')
-
 
     args = parser.parse_args()
     
