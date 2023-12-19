@@ -7,42 +7,104 @@ from torch.utils.data import TensorDataset, DataLoader, Dataset
 
 def preprocess_user(args, users):
     ######## user preprocessing start
-    if args.user_split:
-        print("user preprocessing start")
-        ######## 1. location split
-        __split_user_location__(users)
-        ######## 2. remove location special symbols
+    print("|-user preprocessing [start]")
+
+    if 'location' in args.preprocess_user:
+        ######## 1. remove location special symbols
         __remove_location_special_symbols__(users)
-        ######## 3. fill nan value with unknown
-        __fill_nan_value_with_unknown__(users)
+
+        ######## 2. location split
+        __split_user_location__(users)
+
+        ######## 3. fill unknown value with nan
+        __fill_unknown_value_with_nan__(users)
+
         ######## 4. fill state and country from city
         __fill_state_country_from_city__(users)
-        print("user preprocessing end")
+    
     ######## user preprocessing end
-    pass
-
-def __fill_state_country_from_city__(users):
-    print("fill state and country from start")
-    print("fill state and country from end")
-
-def __fill_nan_value_with_unknown__(users):
-    print("fill nan value with unknown start")
-    print("fill nan value with unknown end")
-
-def __remove_location_special_symbols__(users):
-    print("remove location special symbols start")
-    print("remove location special symbols end")
-
-def __split_user_location__(users, delimeter=','):
-    print("split user location start")
-    city_state_country = users['lcoation'].str.split(delimeter).strip()
-    users['city'] = city_state_country[0]
-    users['state'] = city_state_country[1]
-    users['country'] = city_state_country[2]
-    print("split user location end")
+    print("|-user preprocessing [end]")
+    
 
 def preprocess_book(args, books):
-    pass
+    ######## book preprocessing start
+    print("|-book preprocessing [start]")
+
+    # columns = ['isbn', 'book_title', 'book_author', 'year_of_publication', 'publisher', 'img_url', 'language', 'category', 'summary', 'img_path']
+    if 'isbn' in args.preprocess_book:
+        pass
+
+    if 'book_title' in args.preprocess_book:
+        pass
+
+    if 'book_author' in args.preprocess_book:
+        pass
+
+    if 'year_of_publication' in args.preprocess_book:
+        pass
+
+    if 'publisher' in args.preprocess_book:
+        pass
+
+    if 'img' in args.preprocess_book:
+        pass
+
+    if 'language' in args.preprocess_book:
+        pass
+
+    if 'category' in args.preprocess_book:
+        pass
+
+    if 'summary' in args.preprocess_book:
+        pass
+
+    ######## book preprocessing end
+    print("|-book preprocessing [end]")
+
+def __fill_state_country_from_city__(users):
+    print(" |-fill state and country from city [start]")
+    city2state = {}
+    city2country = {}
+
+    for _, user in users.iterrows():
+        city = user['location_city']
+        if pd.isna(city) or city == 'na' or city == 'nan':
+            continue
+        if city not in city2state:
+            state = user['location_state']
+            if not pd.isna(state) and state != 'na' and state != 'nan':
+                city2state[city] = state
+        if city not in city2country:
+            country = user['location_country']
+            if not pd.isna(country) and country != 'na' and country != 'nan':
+                city2country[city] = country
+    
+    nan_state_rows = users['location_state'].isna() & users['location_city'].notna()
+    nan_country_rows = users['location_country'].isna() & users['location_city'].notna()
+
+    users.loc[nan_state_rows, 'location_state'] = users.loc[nan_state_rows, 'location_city'].map(city2state)
+    users.loc[nan_country_rows, 'location_country'] = users.loc[nan_country_rows, 'location_city'].map(city2country)
+
+    print(" |-fill state and country from city [end]")
+
+def __fill_unknown_value_with_nan__(users):
+    print(" |-fill unknown value with nan [start]")
+    users['location'] = users['location'].replace('na', np.nan) #특수문자 제거로 n/a가 na로 바뀌게 되었습니다. 따라서 이를 컴퓨터가 인식할 수 있는 결측값으로 변환합니다.
+    users['location'] = users['location'].replace('', np.nan) # 일부 경우 , , ,으로 입력된 경우가 있었으므로 이런 경우에도 결측값으로 변환합니다.
+    print(" |-fill unknown value with nan [end]")
+
+def __remove_location_special_symbols__(users, regex=r'[^0-9a-zA-Z:,]'):
+    print(" |-remove location special symbols [start]")
+    users['location'] = users['location'].str.replace(regex, '', regex=True) # 특수문자 제거
+    print(" |-remove location special symbols [end]")
+
+def __split_user_location__(users, delimeter=','):
+    print(" |-split user location [start]")
+    users['location_city'] = users['location'].apply(lambda x: x.split(',')[0].strip()) # location_city 정의: location의 첫번째 부분
+    users['location_state'] = users['location'].apply(lambda x: x.split(',')[1].strip()) # location_state 정의: location의 두번째 부분
+    users['location_country'] = users['location'].apply(lambda x: x.split(',')[2].strip()) # location_country 정의: location의 세번째 부분
+    print(" |-split user location [end]")
+
 
 def dl_data_load(args):
     """
