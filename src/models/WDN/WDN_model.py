@@ -54,15 +54,20 @@ class WideAndDeepModel(nn.Module):
     def __init__(self, args, data):
         super().__init__()
         self.field_dims = data['field_dims']
+        self.deep_rate = args.wdn_rate
+        self.minus_rate = args.minus_rate
         self.wide = WideModel(self.field_dims)
-        self.embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
+        self.plus_embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
+        self.minus_embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
         self.embed_output_dim = len(self.field_dims) * args.embed_dim
-        self.deep = DeepModel(self.embed_output_dim, args.mlp_dims, args.dropout)
+        self.plus_deep = DeepModel(self.embed_output_dim, args.mlp_dims, args.dropout)
+        self.minus_deep = DeepModel(self.embed_output_dim, args.mlp_dims, args.dropout)
 
 
     def forward(self, x: torch.Tensor):
-        embed_x = self.embedding(x)
-        x = self.wide(x) + self.deep(embed_x.view(-1, self.embed_output_dim))
+        embed_x = self.plus_embedding(x)
+        minus_embed_x = self.minus_embedding(x)
+        x = ((1-self.deep_rate) * self.wide(x)) + (self.deep_rate * ((1-self.minus_rate) * self.plus_deep(embed_x.view(-1, self.embed_output_dim))) - (self.minus_rate * self.minus_deep(minus_embed_x.view(-1, self.embed_output_dim))))
         return x.squeeze(1)
 
 
