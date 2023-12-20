@@ -1,7 +1,7 @@
 import time
 import argparse
 import pandas as pd
-from src.utils import Logger, Setting, models_load, parse_args
+from src.utils import Logger, Setting, models_load, parse_args, parse_args_boolean
 from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
@@ -9,6 +9,7 @@ from src.data import text_data_load, text_data_split, text_data_loader
 from src.data import ml_data_load, ml_data_split
 from src.train import train, test, ml_train, ml_test
 from src.ml_config.CatBoost import CatBoostConfig
+from src.ml_config.XGBoost import XGBoostConfig
 import wandb
 
 def main(args):
@@ -27,7 +28,7 @@ def main(args):
         import nltk
         nltk.download('punkt')
         data = text_data_load(args)
-    elif args.model in ('CatBoost',):
+    elif args.model in ('CatBoost', 'XGBoost',):
         data = ml_data_load(args)
     else:
         pass
@@ -51,7 +52,7 @@ def main(args):
         data = text_data_split(args, data)
         data = text_data_loader(args, data)
 
-    elif args.model in ('CatBoost',):
+    elif args.model in ('CatBoost', 'XGBoost'):
         data = ml_data_split(args, data)
 
     else:
@@ -82,6 +83,8 @@ def main(args):
 
         if args.model in ('CatBoost',):
             wandb.config.update(CatBoostConfig)
+        elif args.model == 'XGBoost':
+            wandb.config.update(XGBoostConfig)
             
 
     ######################## Model
@@ -91,7 +94,7 @@ def main(args):
 
     ######################## TRAIN
     print(f'--------------- {args.model} TRAINING ---------------')
-    if args.model in ('CatBoost',):
+    if args.model in ('CatBoost', 'XGBoost'):
         model = ml_train(args, model, data, logger, setting)
     else:
         model = train(args, model, data, logger, setting)
@@ -99,7 +102,7 @@ def main(args):
 
     ######################## INFERENCE
     print(f'--------------- {args.model} PREDICT ---------------')
-    if args.model in ('CatBoost',):
+    if args.model in ('CatBoost', 'XGBoost'):
         predicts = ml_test(args, model, data, setting)
     else:
         predicts = test(args, model, data, setting)
@@ -108,7 +111,8 @@ def main(args):
     ######################## SAVE PREDICT
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
     submission = pd.read_csv(args.data_path + 'sample_submission.csv')
-    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM'):
+    
+    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost'):
         submission['rating'] = predicts
     else:
         pass
@@ -116,6 +120,9 @@ def main(args):
     submission.to_csv(filename, index=False)
     
     if args.wandb:
+        submission_artifact = wandb.Artifact('submission', type='output')
+        submission_artifact.add_file(filename, name=filename[9:-4])
+        wandb.log_artifact(submission_artifact)
         wandb.finish()
 
 
@@ -129,13 +136,13 @@ if __name__ == "__main__":
     ############### BASIC OPTION
     arg('--data_path', type=str, default='data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM'],
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
     arg('--seed', type=int, default=42, help='seed 값을 조정할 수 있습니다.')
     arg('--use_best_model', type=bool, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
-    arg('--wandb', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=True, help='WandB 사용 여부를 설정할 수 있습니다.')
+    arg('--wandb', type=parse_args_boolean, default=True, help='WandB 사용 여부를 설정할 수 있습니다.')
 
 
     ############### TRAINING OPTION

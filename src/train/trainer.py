@@ -6,6 +6,7 @@ import torch.nn as nn
 from torch.nn import MSELoss
 from torch.optim import SGD, Adam
 import wandb
+import xgboost as xgb
 
 class RMSELoss(nn.Module):
     def __init__(self):
@@ -26,9 +27,9 @@ def train(args, model, dataloader, logger, setting):
     else:
         pass
     if args.optimizer == 'SGD':
-        optimizer = SGD(model.parameters(), lr=args.lr)
+        optimizer = SGD(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     elif args.optimizer == 'ADAM':
-        optimizer = Adam(model.parameters(), lr=args.lr)
+        optimizer = Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     else:
         pass
 
@@ -67,8 +68,18 @@ def train(args, model, dataloader, logger, setting):
         if minimum_loss > valid_loss:
             minimum_loss = valid_loss
             os.makedirs(args.saved_model_path, exist_ok=True)
-            torch.save(model.state_dict(), f'{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt')
+            model_file_path = f'{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt'
+            torch.save(model.state_dict(), model_file_path)
+            
+               
     logger.close()
+    
+    # Add the model file to the artifact
+    if args.wandb:
+        model_artifact = wandb.Artifact('best_model', type='model')
+        model_artifact.add_file(model_file_path, name=f'{setting.save_time}_{args.model}_model.pt')
+        wandb.log_artifact(model_artifact)
+            
     return model
 
 
@@ -115,13 +126,16 @@ def test(args, model, dataloader, setting):
 def ml_train(args, model, data, logger, setting):
 
     configs = {
-        'eval_set': (data['X_valid'], data['y_valid']),
-        'use_best_model': True,
-        'verbose_eval': True,
+        'eval_set': [(data['X_train'], data['y_train']), (data['X_valid'], data['y_valid'])],
+        'verbose': True,
     }
-    
-    #if args.wandb:
-    configs['callbacks'] = [WandBCallback()]
+
+    if args.model == 'CatBoost':
+        configs['use_best_model'] = True
+        #if args.wandb:
+        configs['callbacks'] = [WandBCallback()]
+    elif args.model == 'XGBoost':
+        configs['callbacks'] = [WandBCallbackXgb()]
 
     model.fit(
         data['X_train'], data['y_train'], **configs)
@@ -164,3 +178,15 @@ class WandBCallback:
             elif metric_name == 'validation':
                 wandb.log({'Valid Loss': np.mean(metric_value['RMSE'])})
         return True
+    
+class WandBCallbackXgb(xgb.callback.TrainingCallback):
+
+    def after_iteration(self, model, epoch, evals_log):
+        # Log metrics
+        for data, metric in evals_log.items():
+            for metric_name, log in metric.items():
+                if data=='validation_0':
+                    wandb.log({"Train Loss": log[-1]})
+                elif data=='validation_1':
+                    wandb.log({"Valid Loss": log[-1]})
+        return
