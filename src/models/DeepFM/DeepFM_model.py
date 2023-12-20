@@ -191,21 +191,29 @@ class DeepFMModel(nn.Module):
             self.text_dim = field_dims[-1]
             field_dims = field_dims[:-1]
 
+            # text layer
+            self.text_layer = nn.Sequential()
+            self.text_layer.append(nn.Linear(self.text_dim, 256))
+            self.text_layer.append(nn.ReLU())
+            self.text_layer.append(nn.Linear(256, 64))
+            self.text_layer.append(nn.ReLU())
+
         self.input_dim = sum(field_dims) # 입력값의 차원 = 모든 field의 크기를 더한 값
         self.num_fields = len(field_dims) # field의 개수
         self.offsets = np.concatenate([[0], np.cumsum(field_dims)[:-1]]) # 각 field의 시작 위치
         
         # 각 field에 대한 임베딩 레이어를 담은 리스트
         self.embedding = nn.ModuleList([
-            nn.Embedding(self.input_dim, factor_dim) for feature_size in field_dims
+            nn.Embedding(feature_size, factor_dim) for feature_size in field_dims
         ])
+
         
         # FM component
         self.fm = FM_component(input_dim=self.input_dim)
 
         # DNN component 
         dnn_input = self.num_fields * factor_dim
-        if self.text: dnn_input += self.text_dim
+        if self.text: dnn_input += 64#self.text_dim
         self.dnn = DNN_component(
             input_dim=dnn_input,
             mlp_dims=args.mlp_dims, activation_name=args.activation_fn, 
@@ -214,9 +222,13 @@ class DeepFMModel(nn.Module):
         self._init_params()
         
     def _init_params(self):
-        for m in self.modules():
-            if isinstance(m, nn.Embedding):
-                nn.init.xavier_uniform_(m.weight)
+        for child in self.children():
+            if isinstance(child, nn.Embedding):
+                nn.init.xavier_uniform_(child.weight)
+            elif isinstance(child, nn.Linear):
+                nn.init.xavier_uniform_(child.weight)
+                if child.bias:
+                    nn.init.zeros_(child.bias)
 
     def forward(self, x):
         '''
@@ -232,20 +244,26 @@ class DeepFMModel(nn.Module):
 
         if self.text:
             x, text_x = x
+            text_vector = self.text_layer(text_x.squeeze(-1))
+
+        # dense_x 만들기
+        dense_x = [self.embedding[f](x[...,f]) for f in range(self.num_fields)] 
 
         # sparse_x 만들기
         x = x + x.new_tensor(self.offsets).unsqueeze(0)
         sparse_x = torch.zeros(x.size(0), self.input_dim, device=x.device).scatter_(1, x, 1.)
-
-        # dense_x 만들기
-        dense_x = [self.embedding[f](x[...,f]) for f in range(self.num_fields)] 
         
         # FM 레이어를 거쳐 y_fm을 구함
         y_fm = self.fm(sparse_x, torch.stack(dense_x, dim=1))
 
         # DNN 레이어를 거쳐 y_dnn을 구함
         embed_x = torch.cat(dense_x, dim=1)
-        y_dnn = self.dnn(torch.cat((embed_x, text_x.squeeze(-1)), dim=1))
+
+        # text_x 차원 줄이기
+        if self.text:
+            y_dnn = self.dnn(torch.cat((embed_x, text_vector), dim=1))
+        else:
+            y_dnn = self.dnn(embed_x)
         
         # y = y_fm + y_dnn
         output = y_fm + y_dnn.squeeze(1)

@@ -8,17 +8,17 @@ from torch.utils.data import TensorDataset, DataLoader, Dataset
 def age_map(x: int) -> int:
     x = int(x)
     if x < 20:
-        return 1
+        return 0
     elif x >= 20 and x < 30:
-        return 2
+        return 1
     elif x >= 30 and x < 40:
-        return 3
+        return 2
     elif x >= 40 and x < 50:
-        return 4
+        return 3
     elif x >= 50 and x < 60:
-        return 5
+        return 4
     else:
-        return 6
+        return 5
 
 def process_context_data(users, books, ratings1, ratings2):
     """
@@ -43,9 +43,18 @@ def process_context_data(users, books, ratings1, ratings2):
     ratings = pd.concat([ratings1, ratings2]).reset_index(drop=True)
 
     # 인덱싱 처리된 데이터 조인
-    context_df = ratings.merge(users, on='user_id', how='left').merge(books[['isbn', 'category', 'publisher', 'language', 'book_author']], on='isbn', how='left')
-    train_df = ratings1.merge(users, on='user_id', how='left').merge(books[['isbn', 'category', 'publisher', 'language', 'book_author']], on='isbn', how='left')
-    test_df = ratings2.merge(users, on='user_id', how='left').merge(books[['isbn', 'category', 'publisher', 'language', 'book_author']], on='isbn', how='left')
+    context_df = ratings.merge(users, on='user_id', how='left').merge(books[[
+        'isbn', 'category', 'publisher', 'language', 'book_author',
+        'group', 'publisher2', 'title',
+        ]], on='isbn', how='left')
+    train_df = ratings1.merge(users, on='user_id', how='left').merge(books[[
+        'isbn', 'category', 'publisher', 'language', 'book_author',
+        'group', 'publisher2', 'title',
+        ]], on='isbn', how='left')
+    test_df = ratings2.merge(users, on='user_id', how='left').merge(books[[
+        'isbn', 'category', 'publisher', 'language', 'book_author',
+        'group', 'publisher2', 'title',
+        ]], on='isbn', how='left')
 
     # 인덱싱 처리
     loc_city2idx = {v:k for k,v in enumerate(context_df['location_city'].unique())}
@@ -69,15 +78,24 @@ def process_context_data(users, books, ratings1, ratings2):
     publisher2idx = {v:k for k,v in enumerate(context_df['publisher'].unique())}
     language2idx = {v:k for k,v in enumerate(context_df['language'].unique())}
     author2idx = {v:k for k,v in enumerate(context_df['book_author'].unique())}
+    publisher22idx = {v:k for k,v in enumerate(context_df['publisher2'].unique())}
+    group2idx = {v:k for k,v in enumerate(context_df['group'].unique())}
+    title2idx = {v:k for k,v in enumerate(context_df['title'].unique())}
 
     train_df['category'] = train_df['category'].map(category2idx)
     train_df['publisher'] = train_df['publisher'].map(publisher2idx)
     train_df['language'] = train_df['language'].map(language2idx)
     train_df['book_author'] = train_df['book_author'].map(author2idx)
+    train_df['publisher2'] = train_df['publisher2'].map(publisher22idx)
+    train_df['title'] = train_df['title'].map(title2idx)
+    train_df['group'] = train_df['group'].map(group2idx)
     test_df['category'] = test_df['category'].map(category2idx)
     test_df['publisher'] = test_df['publisher'].map(publisher2idx)
     test_df['language'] = test_df['language'].map(language2idx)
     test_df['book_author'] = test_df['book_author'].map(author2idx)
+    test_df['publisher2'] = test_df['publisher2'].map(publisher22idx)
+    test_df['title'] = test_df['title'].map(title2idx)
+    test_df['group'] = test_df['group'].map(group2idx)
 
     idx = {
         "loc_city2idx":loc_city2idx,
@@ -87,6 +105,9 @@ def process_context_data(users, books, ratings1, ratings2):
         "publisher2idx":publisher2idx,
         "language2idx":language2idx,
         "author2idx":author2idx,
+        "publisher22idx":publisher22idx,
+        "group2idx":group2idx,
+        "title2idx":title2idx,
     }
 
     return idx, train_df, test_df
@@ -112,6 +133,10 @@ def context_data_load(args):
     ids = pd.concat([train['user_id'], sub['user_id']]).unique()
     isbns = pd.concat([train['isbn'], sub['isbn']]).unique()
 
+    books['group'] = books['isbn'].apply(lambda x: x[:2]) # 2자리 최대 99
+    books['publisher2'] = books['isbn'].apply(lambda x: x[2:6]) # 4자리 최대 9999
+    books['title'] = books['isbn'].apply(lambda x: x[6:8]) # 3자리 최대 999
+
     idx2user = {idx:id for idx, id in enumerate(ids)}
     idx2isbn = {idx:isbn for idx, isbn in enumerate(isbns)}
 
@@ -133,10 +158,10 @@ def context_data_load(args):
     field_dims = np.array([
         len(user2idx), len(isbn2idx), 6,
         len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),
-        len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), len(idx['author2idx'])], dtype=np.uint32)
+        len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), len(idx['author2idx']),
+        len(idx['group2idx']), len(idx['publisher22idx']), len(idx['title2idx'])
+        ], dtype=np.uint32)
 
-#    if args.merge_title:
-#        pass
     ## summary load
     if args.merge_summary:
 
