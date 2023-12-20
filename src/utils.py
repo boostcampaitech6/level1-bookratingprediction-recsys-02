@@ -65,6 +65,8 @@ def models_load(args, data):
         model = DeepCoNN(args, data).to(args.device)
     elif args.model=='CatBoost':
         model = CatBoostModel(args)
+    elif args.model=='DeepFFM':
+        model = DeepFFM(args, data).to(args.device)
     elif args.model=='XGBoost':
         model = XGBoostModel()
     else:
