@@ -92,3 +92,63 @@ class NeuralCollaborativeFiltering(nn.Module):
         x = torch.cat([gmf, x], dim=1)
         x = self.fc(x).squeeze(1)
         return x
+
+
+# MLP의 output과 context latent factor를 concat한다. -> skip connection에서 영감을 받음...
+class ConcatNeuralCollaborativeFiltering(nn.Module):
+    def __init__(self, args, data):
+        super().__init__()
+        self.field_dims = data['field_dims']
+        self.user_field_idx = np.array((0, ), dtype=np.int32)
+        self.item_field_idx = np.array((1, ), dtype=np.int32)
+        self.embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
+        self.embed_output_dim = len(self.field_dims) * args.embed_dim
+        self.mlp = MultiLayerPerceptron(self.embed_output_dim, args.mlp_dims, args.dropout, output_layer=False)
+
+        self.fc1 = torch.nn.Linear(args.mlp_dims[-1] + 2 * args.embed_dim, 256)
+        self.fc2 = torch.nn.Linear(256, 128)
+        self.fc3 = torch.nn.Linear(128, 1)
+
+    def forward(self, x):
+        x = self.embedding(x)
+        user_x = x[:, self.user_field_idx].squeeze(1)
+        item_x = x[:, self.item_field_idx].squeeze(1)
+        context_x = x[:, 2:, :]
+        context_x = torch.sum(context_x, dim=1)
+        gmf = user_x * item_x
+        x = self.mlp(x.view(-1, self.embed_output_dim))
+        
+        # GMF,MLP,context vector를 concatenation한다.
+        x = torch.cat([gmf, x, context_x], dim=1)
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = self.fc3(x).squeeze(1)
+        
+        return x
+    
+# user, item, context latent factor를 활용하여 GMF를 구현합니다.
+class ContextGMFNeuralCollaborativeFiltering(nn.Module):
+    def __init__(self, args, data):
+        super().__init__()
+        self.field_dims = data['field_dims']
+        self.user_field_idx = np.array((0, ), dtype=np.int32)
+        self.item_field_idx = np.array((1, ), dtype=np.int32)
+        self.embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
+        self.embed_output_dim = len(self.field_dims) * args.embed_dim
+        self.mlp = MultiLayerPerceptron(self.embed_output_dim, args.mlp_dims, args.dropout, output_layer=False)
+        self.fc = torch.nn.Linear(args.mlp_dims[-1] + args.embed_dim, 1)
+
+
+    def forward(self, x):
+        x = self.embedding(x)
+        user_x = x[:, self.user_field_idx].squeeze(1)
+        item_x = x[:, self.item_field_idx].squeeze(1)
+        context_x = x[:, 2:, :]
+        context_x = torch.sum(context_x, dim=1)
+        
+        # user, item, context latent factor를 활용해서 GMF를 만든다.
+        gmf = user_x * item_x * context_x
+        x = self.mlp(x.view(-1, self.embed_output_dim))
+        x = torch.cat([gmf, x], dim=1)
+        x = self.fc(x).squeeze(1)
+        return x
