@@ -15,10 +15,16 @@ import wandb
 def main(args):
     Setting.seed_everything(args.seed)
 
+    # text vector를 생성
+    if args.vector_create:
+        import nltk
+        nltk.download('punkt')
+        data = text_data_load(args)
+        exit()
 
     ######################## DATA LOAD
     print(f'--------------- {args.model} Load Data ---------------')
-    if args.model in ('FM', 'FFM', 'DeepFFM'):
+    if args.model in ('FM', 'FFM', 'DeepFFM', 'DeepFM'):
         data = context_data_load(args)
     elif args.model in ('NCF', 'WDN', 'DCN'):
         data = dl_data_load(args)
@@ -38,7 +44,7 @@ def main(args):
 
     ######################## Train/Valid Split
     print(f'--------------- {args.model} Train/Valid Split ---------------')
-    if args.model in ('FM', 'FFM', 'DeepFFM'):
+    if args.model in ('FM', 'FFM', 'DeepFFM', 'DeepFM'):
         data = context_data_split(args, data)
         data = context_data_loader(args, data)
 
@@ -113,8 +119,7 @@ def main(args):
     ######################## SAVE PREDICT
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
     submission = pd.read_csv(args.data_path + 'sample_submission.csv')
-    
-    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost'):
+    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost', 'DeepFM'):
         submission['rating'] = predicts
     else:
         pass
@@ -139,6 +144,7 @@ if __name__ == "__main__":
     arg('--data_path', type=str, default='data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
     arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost'],
+
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
@@ -160,10 +166,18 @@ if __name__ == "__main__":
     arg('--device', type=str, default='cuda', choices=['cuda', 'cpu'], help='학습에 사용할 Device를 조정할 수 있습니다.')
 
 
-    ############### FM, FFM, NCF, WDN, DCN Common OPTION
-    arg('--embed_dim', type=int, default=16, help='FM, FFM, NCF, WDN, DCN, DeepFFM에서 embedding시킬 차원을 조정할 수 있습니다.')
-    arg('--dropout', type=float, default=0.2, help='NCF, WDN, DCN, DeepFFM에서 Dropout rate를 조정할 수 있습니다.')
-    arg('--mlp_dims', type=parse_args, default=(16, 16), help='NCF, WDN, DCN, DeepFFM에서 MLP Network의 차원을 조정할 수 있습니다.')
+    ############### FM, FFM, NCF, WDN, DCN, DeepFM, DeepFFM Common OPTION
+    arg('--embed_dim', type=int, default=16, help='FM, FFM, NCF, WDN, DCN, DeepFM, DeepFFM에서 embedding시킬 차원을 조정할 수 있습니다.')
+    arg('--dropout', type=float, default=0.2, help='NCF, WDN, DCN, DeepFM, DeepFFM에서 Dropout rate를 조정할 수 있습니다.')
+    arg('--mlp_dims', type=parse_args, default=(16, 16), help='NCF, WDN, DCN, DeepFM, DeepFFM에서 MLP Network의 차원을 조정할 수 있습니다.')
+
+    ############### DeepFM OPTION
+    arg('--activation_fn', type=str, default='relu', choices=['relu', 'tanh'], help='활성화 함수를 변경할 수 있습니다.')
+    arg('--use_bn', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=True, help='배치 정규화 사용 여부를 설정할 수 있습니다.')
+
+    arg('--merge_summary', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='book summary 사용 여부를 설정할 수 있습니다.')
 
 
     ############### DCN
@@ -183,7 +197,6 @@ if __name__ == "__main__":
     arg('--kernel_size', type=int, default=3, help='DEEP_CONN에서 1D conv의 kernel 크기를 조정할 수 있습니다.')
     arg('--word_dim', type=int, default=768, help='DEEP_CONN에서 1D conv의 입력 크기를 조정할 수 있습니다.')
     arg('--out_dim', type=int, default=32, help='DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.')
-
 
     args = parser.parse_args()
     
