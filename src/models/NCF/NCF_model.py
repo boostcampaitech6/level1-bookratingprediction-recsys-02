@@ -94,7 +94,7 @@ class NeuralCollaborativeFiltering(nn.Module):
         return x
 
 
-# MLP의 output과 context latent factor를 concat한다. -> skip connection에서 영감을 받음...
+# cNCF-v2: MLP의 output과 context latent factor를 concat한다. -> skip connection에서 영감을 받음...
 class ConcatNeuralCollaborativeFiltering(nn.Module):
     def __init__(self, args, data):
         super().__init__()
@@ -126,7 +126,7 @@ class ConcatNeuralCollaborativeFiltering(nn.Module):
         
         return x
     
-# user, item, context latent factor를 활용하여 GMF를 구현합니다.
+# cNCF-v3: user, item, context latent factor를 활용하여 GMF를 구현합니다.
 class ContextGMFNeuralCollaborativeFiltering(nn.Module):
     def __init__(self, args, data):
         super().__init__()
