@@ -3,7 +3,7 @@ import argparse
 import pandas as pd
 from src.utils import Logger, Setting, models_load, parse_args, parse_args_boolean
 from src.data import context_data_load, context_data_split, context_data_loader
-from src.data import dl_data_load, dl_data_split, dl_data_loader
+from src.data import dl_data_load, dl_data_split, dl_data_loader, context_dl_data_load
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
 from src.data import ml_data_load, ml_data_split
@@ -22,6 +22,8 @@ def main(args):
         data = context_data_load(args)
     elif args.model in ('NCF', 'WDN', 'DCN'):
         data = dl_data_load(args)
+    elif args.model in ('cNCF', 'cNCF-v2', 'cNCF-v3'):
+        data = context_dl_data_load(args)
     elif args.model == 'CNN_FM':
         data = image_data_load(args)
     elif args.model == 'DeepCoNN':
@@ -40,10 +42,10 @@ def main(args):
         data = context_data_split(args, data)
         data = context_data_loader(args, data)
 
-    elif args.model in ('NCF', 'WDN', 'DCN'):
+    elif args.model in ('NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN'):
         data = dl_data_split(args, data)
         data = dl_data_loader(args, data)
-
+        
     elif args.model=='CNN_FM':
         data = image_data_split(args, data)
         data = image_data_loader(args, data)
@@ -136,7 +138,7 @@ if __name__ == "__main__":
     ############### BASIC OPTION
     arg('--data_path', type=str, default='data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost'],
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
