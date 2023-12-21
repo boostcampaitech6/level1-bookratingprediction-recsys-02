@@ -1,0 +1,25 @@
+program: main.py
+
+method: bayes
+
+name: FFM-sweep
+
+metric:
+  name: Valid Loss
+  goal: minimize
+
+parameters:
+  model:
+    values: ['FFM']
+
+  lr:
+    values: [0.1, 0.01, 0.001]
+
+  batch_size:
+    values: [32, 64, 128]
+
+  embed_dim:
+    values: [8, 16, 32]
+
+  epochs:
+    values: [10, 20, 30, 50]
