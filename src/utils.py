@@ -55,16 +55,20 @@ def models_load(args, data):
         model = FieldAwareFactorizationMachineModel(args, data).to(args.device)
     elif args.model=='DeepFM':
         model = DeepFMModel(args, data).to(args.device)
-    elif args.model=='NCF':
+    elif args.model in ('NCF', 'cNCF'):
         model = NeuralCollaborativeFiltering(args, data).to(args.device)
+    elif args.model=='cNCF-v2':
+        model = ConcatNeuralCollaborativeFiltering(args, data).to(args.device)
+    elif args.model=='cNCF-v3':
+        model = ContextGMFNeuralCollaborativeFiltering(args, data).to(args.device)
     elif args.model=='WDN':
         model = WideAndDeepModel(args, data).to(args.device)
-    elif args.model=='DCN':
-        model = DeepCrossNetworkModel(args, data).to(args.device)
+    # elif args.model=='DCN':
+    #     model = DeepCrossNetworkModel(args, data).to(args.device)
     elif args.model=='CNN_FM':
         model = CNN_FM(args, data).to(args.device)
-    elif args.model=='DeepCoNN':
-        model = DeepCoNN(args, data).to(args.device)
+    # elif args.model=='DeepCoNN':
+    #     model = DeepCoNN(args, data).to(args.device)
     elif args.model=='CatBoost':
         model = CatBoostModel(args)
     elif args.model=='DeepFFM':
