@@ -117,75 +117,6 @@ class DeepFMModel(nn.Module):
         field_dims = data['field_dims']
         
         # 각종 변수들을 설정
-        self.input_dim = sum(field_dims) # 입력값의 차원 = 모든 field의 크기를 더한 값
-        self.num_fields = len(field_dims) # field의 개수
-        self.encoding_dims = np.concatenate([[0], np.cumsum(field_dims)[:-1]]) # 각 field의 시작 위치
-        
-        # 각 field에 대한 임베딩 레이어를 담은 리스트
-        self.embedding = nn.ModuleList([
-            nn.Embedding(self.input_dim, factor_dim) for feature_size in field_dims
-        ])
-        
-        # FM component
-        self.fm = FM_component(input_dim=self.input_dim)
-
-        # DNN component 
-        self.dnn = DNN_component(
-            input_dim=(self.num_fields * factor_dim), 
-            mlp_dims=args.mlp_dims, activation_name=args.activation_fn, 
-            dropout_rate=args.dropout, use_bn=args.use_bn)
-        
-        self._init_params()
-        
-    def _init_params(self):
-        for m in self.modules():
-            if isinstance(m, nn.Embedding):
-                nn.init.xavier_uniform_(m.weight)
-        
-    def forward(self, x):
-        '''
-        :param x: n차원 정수형(Long) 입력 텐서. 사이즈는 "(batch_size, num_fields)"
-            sparse_x : x를 one-hot-encoding한 sparse tensor
-                      Float Tensor이며 사이즈는 "(batch_size, input_dim)"
-            dense_x  : x를 field별로 embedding한 dense tensor
-                       "num_fields"개의 Float Tensor로 이루어진 리스트로, 
-                       각 Float Tensor의 사이즈는 "(batch_size, factor_dim)"
-        :return: y: 모델의 출력값
-                    Float Tensor이며 사이즈는 "(batch_size, 1)"
-        '''
-        # sparse_x 만들기
-        # [기본과제3]의 FieldFM에서 사용한 x_multihot과 동일한 코드
-        sparse_x = x + x.new_tensor(self.encoding_dims).unsqueeze(0)
-        sparse_x = torch.zeros(x.size(0), self.input_dim, device=x.device).scatter_(1, x, 1.)
-
-        # dense_x 만들기
-        # [기본과제3]의 FFMLayer에서 사용한 xv와 동일한 코드
-        dense_x = [self.embedding[f](x[...,f]) for f in range(self.num_fields)] 
-        
-        # FM 레이어를 거쳐 y_fm을 구함
-        y_fm = self.fm(sparse_x, torch.stack(dense_x, dim=1))
-
-        # DNN 레이어를 거쳐 y_dnn을 구함
-        y_dnn = self.dnn(torch.cat(dense_x, dim=1))
-        
-        # y = y_fm + y_dnn
-        y = y_fm + y_dnn.squeeze(1)
-
-        return y
-
-class DeepFMModel(nn.Module):
-    '''
-    DeepFM 모델
-    :param args: 하이퍼파라미터 등 인자를 담은 객체. 속성으로 접근 
-    :param data: 각종 데이터 정보를 담은 dict
-    '''
-    def __init__(self, args, data):
-        super(DeepFMModel, self).__init__()
-
-        factor_dim = args.embed_dim
-        field_dims = data['field_dims']
-        
-        # 각종 변수들을 설정
         self.text = args.merge_summary
         if self.text:
             self.text_dim = field_dims[-1]
@@ -213,7 +144,7 @@ class DeepFMModel(nn.Module):
 
         # DNN component 
         dnn_input = self.num_fields * factor_dim
-        if self.text: dnn_input += 64#self.text_dim
+        if self.text: dnn_input += 64
         self.dnn = DNN_component(
             input_dim=dnn_input,
             mlp_dims=args.mlp_dims, activation_name=args.activation_fn, 
@@ -244,6 +175,7 @@ class DeepFMModel(nn.Module):
 
         if self.text:
             x, text_x = x
+            # text_x 차원 줄이기
             text_vector = self.text_layer(text_x.squeeze(-1))
 
         # dense_x 만들기
@@ -258,8 +190,6 @@ class DeepFMModel(nn.Module):
 
         # DNN 레이어를 거쳐 y_dnn을 구함
         embed_x = torch.cat(dense_x, dim=1)
-
-        # text_x 차원 줄이기
         if self.text:
             y_dnn = self.dnn(torch.cat((embed_x, text_vector), dim=1))
         else:
