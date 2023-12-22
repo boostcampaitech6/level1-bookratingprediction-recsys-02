@@ -67,7 +67,8 @@ class WideAndDeepModel(nn.Module):
     def forward(self, x: torch.Tensor):
         embed_x = self.plus_embedding(x)
         minus_embed_x = self.minus_embedding(x)
-        x = ((1-self.deep_rate) * self.wide(x)) + (self.deep_rate * ((1-self.minus_rate) * self.plus_deep(embed_x.view(-1, self.embed_output_dim))) - (self.minus_rate * self.minus_deep(minus_embed_x.view(-1, self.embed_output_dim))))
+        deep_x = (1-self.minus_rate) * self.plus_deep(embed_x.view(-1, self.embed_output_dim)) - (self.minus_rate * self.minus_deep(minus_embed_x.view(-1, self.embed_output_dim)))
+        x = (1-self.deep_rate) * self.wide(x) + (self.deep_rate * deep_x)
         return x.squeeze(1)
 
 

@@ -149,7 +149,8 @@ if __name__ == "__main__":
     arg('--merge_users', type=parse_args_boolean, default=False, help='dl-data에서 users 정보 사용 여부를 설정할 수 있습니다.')
     arg('--merge_books', type=parse_args_boolean, default=False, help='dl-data에서 books 정보 사용 여부를 설정할 수 있습니다.')
     arg('--wdn_rate', type=float, default=0.8, help='WDN에서 Deep component 의 비중을 조정할 수 있습니다.')
-    arg('--minus_rate', type=float, default=0.8, help='WDN에서 Minus Deep component 의 영향도를 조정할 수 있습니다.')
+    arg('--minus_rate', type=float, default=0.0, help='WDN에서 Minus Deep component 의 영향도를 조정할 수 있습니다.')
+    arg('--rating_bias', type=float, default=7.069714, help='WDN에서 유저의 선호여부를 판단하는 기준을 조정할 수 있습니다.')
 
     ############### TRAINING OPTION
     arg('--batch_size', type=int, default=1024, help='Batch size를 조정할 수 있습니다.')
