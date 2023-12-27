@@ -53,22 +53,31 @@ def models_load(args, data):
         model = FactorizationMachineModel(args, data).to(args.device)
     elif args.model=='FFM':
         model = FieldAwareFactorizationMachineModel(args, data).to(args.device)
-    elif args.model=='NCF':
+    elif args.model=='DeepFM':
+        model = DeepFMModel(args, data).to(args.device)
+    elif args.model in ('NCF', 'cNCF'):
         model = NeuralCollaborativeFiltering(args, data).to(args.device)
+    elif args.model=='cNCF-v2':
+        model = ConcatNeuralCollaborativeFiltering(args, data).to(args.device)
+    elif args.model=='cNCF-v3':
+        model = ContextGMFNeuralCollaborativeFiltering(args, data).to(args.device)
     elif args.model=='WDN':
         model = WideAndDeepModel(args, data).to(args.device)
-    elif args.model=='DCN':
-        model = DeepCrossNetworkModel(args, data).to(args.device)
+    # elif args.model=='DCN':
+    #     model = DeepCrossNetworkModel(args, data).to(args.device)
     elif args.model=='CNN_FM':
         model = CNN_FM(args, data).to(args.device)
-    elif args.model=='DeepCoNN':
-        model = DeepCoNN(args, data).to(args.device)
+    # elif args.model=='DeepCoNN':
+    #     model = DeepCoNN(args, data).to(args.device)
     elif args.model=='CatBoost':
         model = CatBoostModel(args)
+    elif args.model=='DeepFFM':
+        model = DeepFFM(args, data).to(args.device)
     elif args.model=='XGBoost':
         model = XGBoostModel()
     else:
-        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,XGBoost]')
+        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM,XGBoost]')
+
     return model
 
 

@@ -39,7 +39,10 @@ def train(args, model, dataloader, logger, setting):
         batch = 0
 
         for idx, data in enumerate(dataloader['train_dataloader']):
-            if args.model == 'CNN_FM':
+            if args.model == 'DeepFM' and args.merge_summary:
+                x, y = [data['context_vector'].to(args.device), 
+                    data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
+            elif args.model == 'CNN_FM':
                 x, y = [data['user_isbn_vector'].to(args.device), data['img_vector'].to(args.device)], data['label'].to(args.device)
             elif args.model == 'DeepCoNN':
                 x, y = [data['user_isbn_vector'].to(args.device), data['user_summary_merge_vector'].to(args.device), data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
@@ -68,8 +71,18 @@ def train(args, model, dataloader, logger, setting):
         if minimum_loss > valid_loss:
             minimum_loss = valid_loss
             os.makedirs(args.saved_model_path, exist_ok=True)
-            torch.save(model.state_dict(), f'{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt')
+            model_file_path = f'{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt'
+            torch.save(model.state_dict(), model_file_path)
+            
+               
     logger.close()
+    
+    # Add the model file to the artifact
+    if args.wandb:
+        model_artifact = wandb.Artifact('best_model', type='model')
+        model_artifact.add_file(model_file_path, name=f'{setting.save_time}_{args.model}_model.pt')
+        wandb.log_artifact(model_artifact)
+            
     return model
 
 
@@ -79,7 +92,10 @@ def valid(args, model, dataloader, loss_fn):
     batch = 0
 
     for idx, data in enumerate(dataloader['valid_dataloader']):
-        if args.model == 'CNN_FM':
+        if args.model == 'DeepFM' and args.merge_summary:
+            x, y = [data['context_vector'].to(args.device), 
+                data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
+        elif args.model == 'CNN_FM':
             x, y = [data['user_isbn_vector'].to(args.device), data['img_vector'].to(args.device)], data['label'].to(args.device)
         elif args.model == 'DeepCoNN':
             x, y = [data['user_isbn_vector'].to(args.device), data['user_summary_merge_vector'].to(args.device), data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
@@ -102,7 +118,9 @@ def test(args, model, dataloader, setting):
     model.eval()
 
     for idx, data in enumerate(dataloader['test_dataloader']):
-        if args.model == 'CNN_FM':
+        if args.model == 'DeepFM' and args.merge_summary:
+            x = [data['context_vector'].to(args.device), data['item_summary_vector'].to(args.device)]
+        elif args.model == 'CNN_FM':
             x, _ = [data['user_isbn_vector'].to(args.device), data['img_vector'].to(args.device)], data['label'].to(args.device)
         elif args.model == 'DeepCoNN':
             x, _ = [data['user_isbn_vector'].to(args.device), data['user_summary_merge_vector'].to(args.device), data['item_summary_vector'].to(args.device)], data['label'].to(args.device)
@@ -137,18 +155,6 @@ def ml_train(args, model, data, logger, setting):
 
 
 def ml_test(args, model, data, setting):
-
-    # when model instanciation
-    #if args.use_best_model == True & model.get_best_iteration():
-    #    model.get_best_iteration()
-    #else:
-    #    pass
-
-    # model save
-#    model.save_model(f'./saved_models/{setting.save_time}_{args.model}_model.pt',
-#           format="cbm",
-#           export_parameters=None,
-#           pool=None)
 
     # predict
     predicts = model.predict(data['test'])
