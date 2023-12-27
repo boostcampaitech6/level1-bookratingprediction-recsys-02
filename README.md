@@ -1,6 +1,6 @@
 ![header](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=250&section=header&text=Level1-BookRatingPrediction&desc=RecSys-02&fontSize=50&fontColor=FFFFFF&fontAlignY=40)
-- [랩업 레포트]()
-- [최종 발표 자료]()
+- [랩업 레포트](https://github.com/boostcampaitech6/level1-bookratingprediction-recsys-02/docs/RecSys_팀%리포트(02조).pdf)
+- [최종 발표 자료](https://github.com/boostcampaitech6/level1-bookratingprediction-recsys-02/docs/Recsys02-level1-BookRatingPrediction.pdf)
 # 프로젝트 개요
 **소비자들의 책 구매 결정에 대한 도움을 주기 위한 개인화된 상품 추천 대회** <br>
 일반적으로 책 한 권은 원고지 기준 800~1000매 정도 되는 분량을 가지고 있습니다.
