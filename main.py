@@ -146,10 +146,10 @@ if __name__ == "__main__":
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
     arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'DeepFM', 'XGBoost'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
-    arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
+    arg('--data_shuffle', type=parse_args_boolean, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
     arg('--seed', type=int, default=42, help='seed 값을 조정할 수 있습니다.')
-    arg('--use_best_model', type=bool, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
+    arg('--use_best_model', type=parse_args_boolean, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
     arg('--wandb', type=parse_args_boolean, default=True, help='WandB 사용 여부를 설정할 수 있습니다.')
 
 
@@ -211,7 +211,7 @@ if __name__ == "__main__":
 
 
     ############### DeepCoNN
-    arg('--vector_create', type=bool, default=False, help='DEEP_CONN에서 text vector 생성 여부를 조정할 수 있으며 최초 학습에만 True로 설정하여야합니다.')
+    arg('--vector_create', type=parse_args_boolean, default=False, help='DEEP_CONN에서 text vector 생성 여부를 조정할 수 있으며 최초 학습에만 True로 설정하여야합니다.')
     arg('--deepconn_embed_dim', type=int, default=32, help='DEEP_CONN에서 user와 item에 대한 embedding시킬 차원을 조정할 수 있습니다.')
     arg('--deepconn_latent_dim', type=int, default=10, help='DEEP_CONN에서 user/item/image에 대한 latent 차원을 조정할 수 있습니다.')
     arg('--conv_1d_out_dim', type=int, default=50, help='DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.')
