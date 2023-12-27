@@ -119,7 +119,7 @@ def main(args):
     ######################## SAVE PREDICT
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
     submission = pd.read_csv(args.data_path + 'sample_submission.csv')
-
+    
     if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost', 'DeepFM'):
         submission['rating'] = predicts
     else:
@@ -144,8 +144,8 @@ if __name__ == "__main__":
     ############### BASIC OPTION
     arg('--data_path', type=str, default='data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost'],
-        help='학습 및 예측할 모델을 선택할 수 있습니다.')
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'DeepFM', 'XGBoost'],
+                                help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
     arg('--seed', type=int, default=42, help='seed 값을 조정할 수 있습니다.')
@@ -171,13 +171,34 @@ if __name__ == "__main__":
     arg('--dropout', type=float, default=0.2, help='NCF, WDN, DCN, DeepFM, DeepFFM에서 Dropout rate를 조정할 수 있습니다.')
     arg('--mlp_dims', type=parse_args, default=(16, 16), help='NCF, WDN, DCN, DeepFM, DeepFFM에서 MLP Network의 차원을 조정할 수 있습니다.')
 
+    ############## context preprocessing
+    arg('--isbn_info', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='isbn의 group, publisher, title 정보의 사용 여부를 설정할 수 있습니다.')
+    arg('--drop_city_state', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='location의 city, state 정보의 사용 여부를 설정할 수 있습니다.')
+    arg('--cut_category', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='category를 빈도 50 이상의 정보만 사용하게 할 지 여부를 설정할 수 있습니다.')
+    arg('--category_impute', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='category를 mode로 imputation 할 것인지 여부를 설정할 수 있습니다.')
+
+
     ############### DeepFM OPTION
     arg('--activation_fn', type=str, default='relu', choices=['relu', 'tanh'], help='활성화 함수를 변경할 수 있습니다.')
-    arg('--use_bn', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=True, help='배치 정규화 사용 여부를 설정할 수 있습니다.')
+    arg('--use_bn', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=False, help='배치 정규화 사용 여부를 설정할 수 있습니다.')
 
     arg('--merge_summary', type=lambda x:(True if x=='True' else(
         False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
         default=False, help='book summary 사용 여부를 설정할 수 있습니다.')
+
+
+    ############### FM OPTION
+    arg('--age_continuous', type=lambda x:(True if x=='True' else(
+        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
+        default=False, help='age를 continuous 사용 여부를 설정할 수 있습니다. FM에서만 동작합니다.')
 
 
     ############### DCN
