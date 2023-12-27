@@ -76,7 +76,8 @@ def models_load(args, data):
     elif args.model=='XGBoost':
         model = XGBoostModel()
     else:
-        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM]')
+        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM,XGBoost]')
+
     return model
 
 
