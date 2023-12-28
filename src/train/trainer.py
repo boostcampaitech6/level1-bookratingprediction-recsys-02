@@ -135,7 +135,7 @@ def ml_train(args, model, data, logger, setting):
 
     configs = {
         'eval_set': [(data['X_train'], data['y_train']), (data['X_valid'], data['y_valid'])],
-        'verbose': True,
+        # 'verbose': True,
     }
 
     if args.model == 'CatBoost':
