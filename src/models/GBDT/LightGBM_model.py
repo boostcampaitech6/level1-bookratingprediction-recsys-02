@@ -1,7 +1,7 @@
-from lightgbm import LGBMRegressor
+from lightgbm import LGBMModel
 from src.ml_config.LightGBM import LightGBMConfig
 
-class LightGBMModel(LGBMRegressor):
+class LightGBMModel(LGBMModel):
 
     def __init__(self):
         super().__init__(**LightGBMConfig)
