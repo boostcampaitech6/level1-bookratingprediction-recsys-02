@@ -75,8 +75,10 @@ def models_load(args, data):
         model = DeepFFM(args, data).to(args.device)
     elif args.model=='XGBoost':
         model = XGBoostModel()
+    elif args.model=='LightGBM':
+        model = LightGBMModel()
     else:
-        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM,XGBoost]')
+        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM,XGBoost,LightGBM]')
 
     return model
 
