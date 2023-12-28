@@ -180,33 +180,21 @@ if __name__ == "__main__":
     arg('--mlp_dims', type=parse_args, default=(16, 16), help='NCF, WDN, DCN, DeepFM, DeepFFM에서 MLP Network의 차원을 조정할 수 있습니다.')
 
     ############## context preprocessing
-    arg('--isbn_info', type=lambda x:(True if x=='True' else(
-        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
-        default=False, help='isbn의 group, publisher, title 정보의 사용 여부를 설정할 수 있습니다.')
-    arg('--drop_city_state', type=lambda x:(True if x=='True' else(
-        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
-        default=False, help='location의 city, state 정보의 사용 여부를 설정할 수 있습니다.')
-    arg('--cut_category', type=lambda x:(True if x=='True' else(
-        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
-        default=False, help='category를 빈도 50 이상의 정보만 사용하게 할 지 여부를 설정할 수 있습니다.')
-    arg('--category_impute', type=lambda x:(True if x=='True' else(
-        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
-        default=False, help='category를 mode로 imputation 할 것인지 여부를 설정할 수 있습니다.')
+    arg('--isbn_info', type=parse_args_boolean, default=False, help='isbn의 group, publisher, title 정보의 사용 여부를 설정할 수 있습니다.')
+    arg('--drop_city_state', type=parse_args_boolean, default=False, help='location의 city, state 정보의 사용 여부를 설정할 수 있습니다.')
+    arg('--cut_category', type=parse_args_boolean, default=False, help='category를 빈도 50 이상의 정보만 사용하게 할 지 여부를 설정할 수 있습니다.')
+    arg('--category_impute', type=parse_args_boolean, default=False, help='category를 mode로 imputation 할 것인지 여부를 설정할 수 있습니다.')
 
 
     ############### DeepFM OPTION
     arg('--activation_fn', type=str, default='relu', choices=['relu', 'tanh'], help='활성화 함수를 변경할 수 있습니다.')
-    arg('--use_bn', type=lambda x:(True if x=='True' else(False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), default=False, help='배치 정규화 사용 여부를 설정할 수 있습니다.')
+    arg('--use_bn', type=parse_args_boolean, default=False, help='배치 정규화 사용 여부를 설정할 수 있습니다.')
 
-    arg('--merge_summary', type=lambda x:(True if x=='True' else(
-        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
-        default=False, help='book summary 사용 여부를 설정할 수 있습니다.')
+    arg('--merge_summary', type=parse_args_boolean, default=False, help='book summary 사용 여부를 설정할 수 있습니다.')
 
 
     ############### FM OPTION
-    arg('--age_continuous', type=lambda x:(True if x=='True' else(
-        False if x=='False' else argparse.ArgumentTypeError('Boolean value expected.'))), 
-        default=False, help='age를 continuous 사용 여부를 설정할 수 있습니다. FM에서만 동작합니다.')
+    arg('--age_continuous', type=parse_args_boolean, default=False, help='age를 continuous 사용 여부를 설정할 수 있습니다. FM에서만 동작합니다.')
 
 
     ############### DCN
