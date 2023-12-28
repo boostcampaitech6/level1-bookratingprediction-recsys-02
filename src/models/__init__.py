@@ -8,3 +8,4 @@ from .DeepFFM.DeepFFM_model import DeepFFM
 from .FFM.FFM_model import FieldAwareFactorizationMachineModel
 from .FM.FM_model import FactorizationMachineModel
 from .GBDT.XGBoost_model import XGBoostModel
+from .GBDT.LightGBM_model import LightGBMModel
