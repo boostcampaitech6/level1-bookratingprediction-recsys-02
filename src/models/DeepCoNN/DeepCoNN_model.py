@@ -69,6 +69,7 @@ class DeepCoNN(nn.Module):
         super(DeepCoNN, self).__init__()
         self.field_dims = np.array([len(data['user2idx']), len(data['isbn2idx'])], dtype=np.uint32)
         self.embedding = FeaturesEmbedding(self.field_dims, args.deepconn_embed_dim)
+        self.field_nums = len(self.field_dims)
         self.cnn_u = CNN_1D(
                              word_dim=args.word_dim,
                              out_dim=args.out_dim,
@@ -82,7 +83,7 @@ class DeepCoNN(nn.Module):
                              conv_1d_out_dim=args.conv_1d_out_dim,
                             )
         self.fm = FactorizationMachine(
-                                        input_dim=(args.conv_1d_out_dim * 2) + (args.deepconn_embed_dim*len(self.field_dims)),
+                                        input_dim=(args.conv_1d_out_dim * 2) + (args.deepconn_embed_dim*self.field_nums),
                                         latent_dim=args.deepconn_latent_dim,
                                         )
 
