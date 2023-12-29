@@ -91,8 +91,11 @@
 ```
 
 
+# 대시보드
 
+[Demo](https://github.com/boostcampaitech6/level1-bookratingprediction-recsys-02/assets/97018869/55d29f86-8c3f-4f0c-8160-a30c6d5d884a)
 
+# 라이센스
 
 
 ![footer](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=200&section=footer&)
