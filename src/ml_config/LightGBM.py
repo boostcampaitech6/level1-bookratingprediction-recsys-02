@@ -6,5 +6,6 @@ LightGBMConfig={
     'colsample_bytree':0.7,
     'objective':'regression',
     'metric':'rmse',
-    'early_stopping_rounds':50
+    'early_stopping_rounds':50,
+    'verbosity':10
 }
