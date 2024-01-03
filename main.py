@@ -10,6 +10,7 @@ from src.data import ml_data_load, ml_data_split
 from src.train import train, test, ml_train, ml_test
 from src.ml_config.CatBoost import CatBoostConfig
 from src.ml_config.XGBoost import XGBoostConfig
+from src.ml_config.LightGBM import LightGBMConfig
 import wandb
 
 def main(args):
@@ -36,7 +37,7 @@ def main(args):
         import nltk
         nltk.download('punkt')
         data = text_data_load(args)
-    elif args.model in ('CatBoost', 'XGBoost',):
+    elif args.model in ('CatBoost', 'XGBoost', 'LightGBM'):
         data = ml_data_load(args)
     else:
         pass
@@ -60,7 +61,7 @@ def main(args):
         data = text_data_split(args, data)
         data = text_data_loader(args, data)
 
-    elif args.model in ('CatBoost', 'XGBoost'):
+    elif args.model in ('CatBoost', 'XGBoost', 'LightGBM'):
         data = ml_data_split(args, data)
 
     else:
@@ -93,6 +94,8 @@ def main(args):
             wandb.config.update(CatBoostConfig)
         elif args.model == 'XGBoost':
             wandb.config.update(XGBoostConfig)
+        elif args.model == 'LightGBM':
+            wandb.config.update(LightGBMConfig)
             
 
     ######################## Model
@@ -102,7 +105,7 @@ def main(args):
 
     ######################## TRAIN
     print(f'--------------- {args.model} TRAINING ---------------')
-    if args.model in ('CatBoost', 'XGBoost'):
+    if args.model in ('CatBoost', 'XGBoost', 'LightGBM'):
         model = ml_train(args, model, data, logger, setting)
     else:
         model = train(args, model, data, logger, setting)
@@ -110,7 +113,7 @@ def main(args):
 
     ######################## INFERENCE
     print(f'--------------- {args.model} PREDICT ---------------')
-    if args.model in ('CatBoost', 'XGBoost'):
+    if args.model in ('CatBoost', 'XGBoost', 'LightGBM'):
         predicts = ml_test(args, model, data, setting)
     else:
         predicts = test(args, model, data, setting)
@@ -120,7 +123,7 @@ def main(args):
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
     submission = pd.read_csv(args.data_path + 'sample_submission.csv')
     
-    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost', 'DeepFM'):
+    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'XGBoost', 'DeepFM', 'LightGBM'):
         submission['rating'] = predicts
     else:
         pass
@@ -144,7 +147,7 @@ if __name__ == "__main__":
     ############### BASIC OPTION
     arg('--data_path', type=str, default='data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'DeepFM', 'XGBoost'],
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'cNCF', 'cNCF-v2', 'cNCF-v3', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'CatBoost', 'DeepFFM', 'DeepFM', 'XGBoost', 'LightGBM'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=parse_args_boolean, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')

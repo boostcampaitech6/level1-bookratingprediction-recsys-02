@@ -138,6 +138,9 @@ def ml_train(args, model, data, logger, setting):
         'verbose': True,
     }
 
+    if args.model == 'LightGBM':
+        configs.pop('verbose')
+
     if args.model == 'CatBoost':
         configs['use_best_model'] = True
 

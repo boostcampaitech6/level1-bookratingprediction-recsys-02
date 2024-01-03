@@ -8,6 +8,8 @@ import logging
 import json
 from .models import *
 import argparse
+from lightgbm import LGBMRegressor
+from src.ml_config.LightGBM import LightGBMConfig
 
 # 입력값을 소문자로 변환
 def parse_args_boolean(value):
@@ -75,8 +77,10 @@ def models_load(args, data):
         model = DeepFFM(args, data).to(args.device)
     elif args.model=='XGBoost':
         model = XGBoostModel()
+    elif args.model=='LightGBM':
+        model = LGBMRegressor(**LightGBMConfig)
     else:
-        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM,XGBoost]')
+        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost,DeepFM,XGBoost,LightGBM]')
 
     return model
 
