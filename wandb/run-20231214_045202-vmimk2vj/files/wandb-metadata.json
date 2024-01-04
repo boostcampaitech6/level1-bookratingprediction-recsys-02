@@ -1,0 +1,91 @@
+{
+    "os": "Linux-5.4.0-99-generic-x86_64-with-glibc2.31",
+    "python": "3.9.18",
+    "heartbeatAt": "2023-12-14T04:52:08.132123",
+    "startedAt": "2023-12-14T04:52:02.388201",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--model",
+        "NCF"
+    ],
+    "state": "running",
+    "program": "/data/ephemeral/home/level1-bookratingprediction-recsys-02/main.py",
+    "codePathLocal": "main.py",
+    "codePath": "main.py",
+    "git": {
+        "remote": "https://ChangZero:@github.com/boostcampaitech6/level1-bookratingprediction-recsys-02.git",
+        "commit": "27fb79679a1dd5c45e7edb33df2078b2c4bb485b"
+    },
+    "email": "changzero.kim@gmail.com",
+    "root": "/data/ephemeral/home/level1-bookratingprediction-recsys-02",
+    "host": "instance-4441",
+    "username": "root",
+    "executable": "/opt/conda/envs/level1-1/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 2200.301,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2200.301,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 48.963348388671875,
+            "used": 39.823604583740234
+        }
+    },
+    "gpu": "Tesla V100-SXM2-32GB",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "Tesla V100-SXM2-32GB",
+            "memory_total": 34089730048
+        }
+    ],
+    "memory": {
+        "total": 88.38546752929688
+    }
+}

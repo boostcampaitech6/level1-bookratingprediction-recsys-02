@@ -1,0 +1,120 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    python_version: 3.9.18
+    cli_version: 0.16.1
+    framework: huggingface
+    huggingface_version: 4.36.0
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1702529522.394391
+    t:
+      1:
+      - 1
+      - 5
+      - 11
+      - 41
+      - 49
+      - 53
+      - 55
+      2:
+      - 1
+      - 5
+      - 11
+      - 41
+      - 49
+      - 53
+      - 55
+      3:
+      - 23
+      4: 3.9.18
+      5: 0.16.1
+      6: 4.36.0
+      8:
+      - 5
+      13: linux-x86_64
+data_path:
+  desc: null
+  value: data/
+saved_model_path:
+  desc: null
+  value: ./saved_models
+model:
+  desc: null
+  value: NCF
+data_shuffle:
+  desc: null
+  value: true
+test_size:
+  desc: null
+  value: 0.2
+seed:
+  desc: null
+  value: 42
+use_best_model:
+  desc: null
+  value: true
+batch_size:
+  desc: null
+  value: 1024
+epochs:
+  desc: null
+  value: 10
+lr:
+  desc: null
+  value: 0.001
+loss_fn:
+  desc: null
+  value: RMSE
+optimizer:
+  desc: null
+  value: ADAM
+weight_decay:
+  desc: null
+  value: 1.0e-06
+device:
+  desc: null
+  value: cuda
+embed_dim:
+  desc: null
+  value: 16
+dropout:
+  desc: null
+  value: 0.2
+mlp_dims:
+  desc: null
+  value:
+  - 16
+  - 16
+num_layers:
+  desc: null
+  value: 3
+cnn_embed_dim:
+  desc: null
+  value: 64
+cnn_latent_dim:
+  desc: null
+  value: 12
+vector_create:
+  desc: null
+  value: false
+deepconn_embed_dim:
+  desc: null
+  value: 32
+deepconn_latent_dim:
+  desc: null
+  value: 10
+conv_1d_out_dim:
+  desc: null
+  value: 50
+kernel_size:
+  desc: null
+  value: 3
+word_dim:
+  desc: null
+  value: 768
+out_dim:
+  desc: null
+  value: 32
